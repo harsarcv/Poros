@@ -1,56 +1,272 @@
-# Welcome to your Expo app 👋
+# Poros — Sistem Manajemen Proyek & Kolaborasi Tim
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Poros is a mobile project management and team collaboration application designed to help teams organize projects, assign tasks, monitor progress, and manage task workflows in one application.
 
-## Get started
+## Features
 
-1. Install dependencies
+- User authentication with JWT
+- Role-based access control
+- Project management
+- Project member management
+- Task creation and assignment
+- Task priority and deadline management
+- Task progress dashboard
+- Task workflow with review and revision
+- Activity history
+- My Tasks for members
+- User profile management
+- Profile photo support
+- Task revision notes
+- REST API integration
+- PostgreSQL database
 
-   ```bash
-   npm install
-   ```
+## Roles & Access
 
-2. Start the app
+### Admin / Manager
 
-   ```bash
-   npx expo start
-   ```
+- Create, edit, and delete projects
+- Manage project members
+- Create and assign tasks
+- Set task priority and deadline
+- Review submitted tasks
+- Approve tasks
+- Request task revisions
+- Monitor project and task progress
+- View activity history
 
-In the output, you'll find options to open the app in a
+### Member
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- View assigned projects
+- View My Tasks
+- View task details
+- Start assigned tasks
+- Submit tasks for review
+- Accept task revisions
+- View priority and deadline
+- View activity history
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Task Workflow
 
-## Get a fresh project
+Poros uses a structured task workflow:
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+TODO
+  ↓
+IN PROGRESS
+  ↓
+REVIEW
+  ↓
+ ┌──────────────┐
+ ↓              ↓
+DONE           REVISI
+                 ↓
+            IN PROGRESS
+                 ↓
+               REVIEW
+                 ↓
+               DONE
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Members manage the execution of tasks, while Admin / Manager handles the review process.
 
-### Other setup steps
+## Tech Stack
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- **React Native** — Mobile application
+- **Expo** — React Native development and Android build
+- **TypeScript** — Main programming language
+- **Node.js & Express.js** — Backend and REST API
+- **PostgreSQL** — Relational database
+- **JWT** — User authentication
+- **AsyncStorage** — Local session storage
+- **Multer** — Profile image upload
+- **Git & GitHub** — Version control
 
-## Learn more
+## Database
 
-To learn more about developing your project with Expo, look at the following resources:
+Poros uses PostgreSQL with the following main tables:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- Users
+- Projects
+- Project Members
+- Tasks
+- Activity Logs
 
-## Join the community
+The `Tasks` table also stores task priority, status, deadline, and revision notes.
 
-Join our community of developers creating universal apps.
+## Project Structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```text
+Poros/
+├── assets/
+│   ├── poros-icon.png
+│   └── poros-logo.png
+├── server/
+│   ├── middleware/
+│   ├── routes/
+│   │   ├── activity.js
+│   │   ├── auth.js
+│   │   ├── members.js
+│   │   ├── projects.js
+│   │   ├── tasks.js
+│   │   └── users.js
+│   ├── db.js
+│   ├── package.json
+│   └── server.js
+├── src/
+│   ├── app/
+│   │   ├── (app)/
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   ├── components/
+│   ├── constants/
+│   ├── hooks/
+│   ├── utils/
+│   └── global.css
+├── .gitignore
+├── app.json
+├── eas.json
+├── package.json
+├── README.md
+├── structure.txt
+└── tsconfig.json
+```
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/harsarcv/Poros.git
+cd Poros
+```
+
+### 2. Install mobile application dependencies
+
+```bash
+npm install
+```
+
+### 3. Install backend dependencies
+
+```bash
+cd server
+npm install
+```
+
+### 4. Configure PostgreSQL
+
+Create a PostgreSQL database named:
+
+```text
+poros
+```
+
+Then configure the database connection in:
+
+```text
+server/.env
+```
+
+Example:
+
+```env
+PORT=5000
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=poros
+DB_USER=postgres
+DB_PASSWORD=your_postgresql_password
+JWT_SECRET=your_jwt_secret
+```
+
+Do not commit the `.env` file to GitHub.
+
+### 5. Run the backend
+
+From the `server/` directory:
+
+```bash
+npm run dev
+```
+
+The backend will run on:
+
+```text
+http://localhost:5000
+```
+
+### 6. Run the mobile application
+
+Open another terminal in the project root:
+
+```bash
+npm start
+```
+
+Then run the application using Expo Go or an Android emulator.
+
+## API
+
+Poros uses a REST API built with Node.js and Express.js.
+
+### Authentication
+
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+
+### Users
+
+- `GET /api/users`
+- `GET /api/users/me`
+
+### Projects
+
+- `GET /api/projects`
+- Project creation, update, and deletion
+- Project member management
+
+### Tasks
+
+- `GET /api/projects/:projectId/tasks`
+- `POST /api/projects/:projectId/tasks`
+- Task update and deletion
+- Task status workflow
+- Task revision management
+
+### Activity
+
+- Activity history endpoints are available through `/api/activity`
+
+### Database Test
+
+- `GET /api/test-db`
+
+## Android Build
+
+Preview APK build using Expo Application Services:
+
+```bash
+eas build --platform android --profile preview
+```
+
+## Security
+
+- JWT authentication
+- Role-based authorization
+- Password hashing on the backend
+- Protected API routes
+- Local environment variables excluded from Git
+
+## License
+
+This project is licensed under the MIT License.
+
+## Author
+
+**Harsa Archive**
+
+Full-Stack Developer | PostgreSQL & Database | Web, Mobile & 3D
+
+GitHub: https://github.com/harsarcv
