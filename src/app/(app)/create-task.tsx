@@ -18,6 +18,7 @@ import {
 
 import { API_URL } from '../../constants/api';
 import { getToken } from '../../utils/storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateTaskScreen() {
     const { id, projectId, projectName } = useLocalSearchParams();
@@ -414,367 +415,372 @@ export default function CreateTaskScreen() {
     // =========================================================
 
     return (
-        <ScrollView
+        <SafeAreaView
             style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
+            edges={['bottom']}
         >
-            {/* HEADER */}
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* HEADER */}
 
-            <View style={styles.header}>
-                <Pressable onPress={() => router.replace('/(app)/tasks')}>
-                    <Text style={styles.back}>
-                        ‹
-                    </Text>
-                </Pressable>
+                <View style={styles.header}>
+                    <Pressable onPress={() => router.replace('/(app)/tasks')}>
+                        <Text style={styles.back}>
+                            ‹
+                        </Text>
+                    </Pressable>
 
-                <View>
-                    <Text style={styles.title}>
-                        {isEditMode
-                            ? 'Edit Tugas'
-                            : 'Buat Tugas'}
-                    </Text>
+                    <View>
+                        <Text style={styles.title}>
+                            {isEditMode
+                                ? 'Edit Tugas'
+                                : 'Buat Tugas'}
+                        </Text>
 
-                    <Text style={styles.subtitle}>
-                        {isEditMode
-                            ? 'Ubah informasi tugas.'
-                            : 'Tambahkan tugas baru ke proyek.'}
-                    </Text>
+                        <Text style={styles.subtitle}>
+                            {isEditMode
+                                ? 'Ubah informasi tugas.'
+                                : 'Tambahkan tugas baru ke proyek.'}
+                        </Text>
+                    </View>
                 </View>
-            </View>
 
-            <View style={styles.form}>
-                {/* NAMA TUGAS */}
+                <View style={styles.form}>
+                    {/* NAMA TUGAS */}
 
-                <Text style={styles.label}>
-                    Nama Tugas
-                </Text>
-
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contoh: Membuat halaman login"
-                    placeholderTextColor="#94A3B8"
-                    value={title}
-                    onChangeText={setTitle}
-                />
-
-                {/* DESKRIPSI */}
-
-                <Text style={styles.label}>
-                    Deskripsi
-                </Text>
-
-                <TextInput
-                    style={[
-                        styles.input,
-                        styles.textArea,
-                    ]}
-                    placeholder="Masukkan deskripsi tugas"
-                    placeholderTextColor="#94A3B8"
-                    multiline
-                    textAlignVertical="top"
-                    value={description}
-                    onChangeText={setDescription}
-                />
-
-                {/* PROYEK */}
-
-                <Text style={styles.label}>
-                    Proyek
-                </Text>
-
-                <Pressable
-                    style={styles.select}
-                    onPress={() =>
-                        setProjectModalVisible(true)
-                    }
-                >
-                    <Text style={styles.selectText}>
-                        {selectedProjectName}
+                    <Text style={styles.label}>
+                        Nama Tugas
                     </Text>
 
-                    <Text style={styles.arrow}>
-                        ›
-                    </Text>
-                </Pressable>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Contoh: Membuat halaman login"
+                        placeholderTextColor="#94A3B8"
+                        value={title}
+                        onChangeText={setTitle}
+                    />
 
-                {/* MEMBER */}
+                    {/* DESKRIPSI */}
 
-                <Text style={styles.label}>
-                    Ditugaskan Kepada
-                </Text>
-
-                <Pressable
-                    style={styles.select}
-                    onPress={() =>
-                        setMemberModalVisible(true)
-                    }
-                >
-                    <Text style={styles.selectText}>
-                        {selectedMember}
+                    <Text style={styles.label}>
+                        Deskripsi
                     </Text>
 
-                    <Text style={styles.arrow}>
-                        ›
+                    <TextInput
+                        style={[
+                            styles.input,
+                            styles.textArea,
+                        ]}
+                        placeholder="Masukkan deskripsi tugas"
+                        placeholderTextColor="#94A3B8"
+                        multiline
+                        textAlignVertical="top"
+                        value={description}
+                        onChangeText={setDescription}
+                    />
+
+                    {/* PROYEK */}
+
+                    <Text style={styles.label}>
+                        Proyek
                     </Text>
-                </Pressable>
 
-                {/* PRIORITAS */}
+                    <Pressable
+                        style={styles.select}
+                        onPress={() =>
+                            setProjectModalVisible(true)
+                        }
+                    >
+                        <Text style={styles.selectText}>
+                            {selectedProjectName}
+                        </Text>
 
-                <Text style={styles.label}>
-                    Prioritas
-                </Text>
+                        <Text style={styles.arrow}>
+                            ›
+                        </Text>
+                    </Pressable>
 
-                <View style={styles.options}>
-                    {[
-                        'Rendah',
-                        'Sedang',
-                        'Tinggi',
-                    ].map((priority) => (
-                        <Pressable
-                            key={priority}
-                            style={
-                                selectedPriority ===
-                                    priority
-                                    ? styles.optionActive
-                                    : styles.option
-                            }
-                            onPress={() =>
-                                setSelectedPriority(
-                                    priority
-                                )
-                            }
-                        >
-                            <Text
+                    {/* MEMBER */}
+
+                    <Text style={styles.label}>
+                        Ditugaskan Kepada
+                    </Text>
+
+                    <Pressable
+                        style={styles.select}
+                        onPress={() =>
+                            setMemberModalVisible(true)
+                        }
+                    >
+                        <Text style={styles.selectText}>
+                            {selectedMember}
+                        </Text>
+
+                        <Text style={styles.arrow}>
+                            ›
+                        </Text>
+                    </Pressable>
+
+                    {/* PRIORITAS */}
+
+                    <Text style={styles.label}>
+                        Prioritas
+                    </Text>
+
+                    <View style={styles.options}>
+                        {[
+                            'Rendah',
+                            'Sedang',
+                            'Tinggi',
+                        ].map((priority) => (
+                            <Pressable
+                                key={priority}
                                 style={
                                     selectedPriority ===
                                         priority
-                                        ? styles.optionActiveText
-                                        : styles.optionText
+                                        ? styles.optionActive
+                                        : styles.option
+                                }
+                                onPress={() =>
+                                    setSelectedPriority(
+                                        priority
+                                    )
                                 }
                             >
-                                {priority}
-                            </Text>
-                        </Pressable>
-                    ))}
-                </View>
+                                <Text
+                                    style={
+                                        selectedPriority ===
+                                            priority
+                                            ? styles.optionActiveText
+                                            : styles.optionText
+                                    }
+                                >
+                                    {priority}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </View>
 
-                {/* STATUS */}
+                    {/* STATUS */}
 
-                <Text style={styles.label}>
-                    Status
-                </Text>
+                    <Text style={styles.label}>
+                        Status
+                    </Text>
 
-                <View style={styles.options}>
-                    {[
-                        'TODO',
-                        'IN PROGRESS',
-                        'REVIEW',
-                        'DONE',
-                    ].map((status) => (
-                        <Pressable
-                            key={status}
-                            style={
-                                selectedStatus ===
-                                    status
-                                    ? styles.optionActive
-                                    : styles.option
-                            }
-                            onPress={() =>
-                                setSelectedStatus(
-                                    status
-                                )
-                            }
-                        >
-                            <Text
+                    <View style={styles.options}>
+                        {[
+                            'TODO',
+                            'IN PROGRESS',
+                            'REVIEW',
+                            'DONE',
+                        ].map((status) => (
+                            <Pressable
+                                key={status}
                                 style={
                                     selectedStatus ===
                                         status
-                                        ? styles.optionActiveText
-                                        : styles.optionText
+                                        ? styles.optionActive
+                                        : styles.option
+                                }
+                                onPress={() =>
+                                    setSelectedStatus(
+                                        status
+                                    )
                                 }
                             >
-                                {status}
-                            </Text>
-                        </Pressable>
-                    ))}
+                                <Text
+                                    style={
+                                        selectedStatus ===
+                                            status
+                                            ? styles.optionActiveText
+                                            : styles.optionText
+                                    }
+                                >
+                                    {status}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </View>
+
+                    {/* DEADLINE */}
+
+                    <Text style={styles.label}>
+                        Deadline
+                    </Text>
+
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Contoh: 2026-10-12"
+                        placeholderTextColor="#94A3B8"
+                        value={deadline}
+                        onChangeText={setDeadline}
+                    />
+
+                    {/* BUTTON */}
+
+                    <Pressable
+                        style={styles.saveButton}
+                        onPress={handleSubmit}
+                        disabled={saving}
+                    >
+                        <Text style={styles.saveButtonText}>
+                            {saving
+                                ? 'Menyimpan...'
+                                : isEditMode
+                                    ? 'Simpan Perubahan'
+                                    : 'Simpan Tugas'}
+                        </Text>
+                    </Pressable>
                 </View>
 
-                {/* DEADLINE */}
-
-                <Text style={styles.label}>
-                    Deadline
-                </Text>
-
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contoh: 2026-10-12"
-                    placeholderTextColor="#94A3B8"
-                    value={deadline}
-                    onChangeText={setDeadline}
-                />
-
-                {/* BUTTON */}
-
-                <Pressable
-                    style={styles.saveButton}
-                    onPress={handleSubmit}
-                    disabled={saving}
-                >
-                    <Text style={styles.saveButtonText}>
-                        {saving
-                            ? 'Menyimpan...'
-                            : isEditMode
-                                ? 'Simpan Perubahan'
-                                : 'Simpan Tugas'}
-                    </Text>
-                </Pressable>
-            </View>
-
-            {/* =================================================
+                {/* =================================================
                 MODAL PROJECT
             ================================================= */}
 
-            <Modal
-                visible={projectModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() =>
-                    setProjectModalVisible(false)
-                }
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>
-                            Pilih Proyek
-                        </Text>
+                <Modal
+                    visible={projectModalVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() =>
+                        setProjectModalVisible(false)
+                    }
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalCard}>
+                            <Text style={styles.modalTitle}>
+                                Pilih Proyek
+                            </Text>
 
-                        {projects.map((project) => (
+                            {projects.map((project) => (
+                                <Pressable
+                                    key={project.id}
+                                    style={styles.memberOption}
+                                    onPress={() => {
+                                        setSelectedProjectId(
+                                            project.id
+                                        );
+
+                                        setSelectedProjectName(
+                                            project.name
+                                        );
+
+                                        setProjectModalVisible(
+                                            false
+                                        );
+                                    }}
+                                >
+                                    <Text
+                                        style={
+                                            styles.memberName
+                                        }
+                                    >
+                                        {project.name}
+                                    </Text>
+                                </Pressable>
+                            ))}
+
                             <Pressable
-                                key={project.id}
-                                style={styles.memberOption}
-                                onPress={() => {
-                                    setSelectedProjectId(
-                                        project.id
-                                    );
-
-                                    setSelectedProjectName(
-                                        project.name
-                                    );
-
+                                style={
+                                    styles.cancelButton
+                                }
+                                onPress={() =>
                                     setProjectModalVisible(
                                         false
-                                    );
-                                }}
+                                    )
+                                }
                             >
                                 <Text
                                     style={
-                                        styles.memberName
+                                        styles.cancelText
                                     }
                                 >
-                                    {project.name}
+                                    Batal
                                 </Text>
                             </Pressable>
-                        ))}
-
-                        <Pressable
-                            style={
-                                styles.cancelButton
-                            }
-                            onPress={() =>
-                                setProjectModalVisible(
-                                    false
-                                )
-                            }
-                        >
-                            <Text
-                                style={
-                                    styles.cancelText
-                                }
-                            >
-                                Batal
-                            </Text>
-                        </Pressable>
+                        </View>
                     </View>
-                </View>
-            </Modal>
+                </Modal>
 
-            {/* =================================================
+                {/* =================================================
                 MODAL MEMBER
             ================================================= */}
 
-            <Modal
-                visible={memberModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() =>
-                    setMemberModalVisible(false)
-                }
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>
-                            Pilih Member
-                        </Text>
+                <Modal
+                    visible={memberModalVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() =>
+                        setMemberModalVisible(false)
+                    }
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalCard}>
+                            <Text style={styles.modalTitle}>
+                                Pilih Member
+                            </Text>
 
-                        {members.map((member) => (
+                            {members.map((member) => (
+                                <Pressable
+                                    key={member.id}
+                                    style={styles.memberOption}
+                                    onPress={() => {
+                                        setSelectedMemberId(
+                                            member.id
+                                        );
+
+                                        setSelectedMember(
+                                            member.name
+                                        );
+
+                                        setMemberModalVisible(
+                                            false
+                                        );
+                                    }}
+                                >
+                                    <Text
+                                        style={
+                                            styles.memberName
+                                        }
+                                    >
+                                        {member.name}
+                                    </Text>
+
+                                    <Text
+                                        style={
+                                            styles.memberRole
+                                        }
+                                    >
+                                        {member.role}
+                                    </Text>
+                                </Pressable>
+                            ))}
+
                             <Pressable
-                                key={member.id}
-                                style={styles.memberOption}
-                                onPress={() => {
-                                    setSelectedMemberId(
-                                        member.id
-                                    );
-
-                                    setSelectedMember(
-                                        member.name
-                                    );
-
+                                style={
+                                    styles.cancelButton
+                                }
+                                onPress={() =>
                                     setMemberModalVisible(
                                         false
-                                    );
-                                }}
-                            >
-                                <Text
-                                    style={
-                                        styles.memberName
-                                    }
-                                >
-                                    {member.name}
-                                </Text>
-
-                                <Text
-                                    style={
-                                        styles.memberRole
-                                    }
-                                >
-                                    {member.role}
-                                </Text>
-                            </Pressable>
-                        ))}
-
-                        <Pressable
-                            style={
-                                styles.cancelButton
-                            }
-                            onPress={() =>
-                                setMemberModalVisible(
-                                    false
-                                )
-                            }
-                        >
-                            <Text
-                                style={
-                                    styles.cancelText
+                                    )
                                 }
                             >
-                                Batal
-                            </Text>
-                        </Pressable>
+                                <Text
+                                    style={
+                                        styles.cancelText
+                                    }
+                                >
+                                    Batal
+                                </Text>
+                            </Pressable>
+                        </View>
                     </View>
-                </View>
-            </Modal>
-        </ScrollView>
+                </Modal>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 

@@ -17,6 +17,7 @@ import { useCallback, useState } from 'react';
 
 import { API_URL } from '../../constants/api';
 import { getToken, getUser } from '../../utils/storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProjectDetail() {
     const { id } = useLocalSearchParams();
@@ -269,7 +270,10 @@ export default function ProjectDetail() {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView
+            style={styles.container}
+            edges={['bottom']}
+        >
 
             {/* HEADER */}
 
@@ -627,11 +631,13 @@ export default function ProjectDetail() {
 
             </ScrollView>
 
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+
+
 
     container: {
         flex: 1,
@@ -874,12 +880,13 @@ const styles = StyleSheet.create({
 
     loadingContainer: {
         flex: 1,
-        justifyContent: 'center',
+        backgroundColor: '#F8FAFC',
         alignItems: 'center',
+        justifyContent: 'center',
     },
 
     loadingText: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#64748B',
     },
 
@@ -925,5 +932,4 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#B91C1C',
     },
-
 });

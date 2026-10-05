@@ -13,7 +13,7 @@ export default function AboutScreen() {
     return (
         <SafeAreaView
             style={styles.container}
-            edges={['top']}
+            edges={['top', 'bottom']}
         >
             {/* =========================
                 HEADER

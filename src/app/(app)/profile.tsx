@@ -95,7 +95,7 @@ export default function ProfileScreen() {
                     {user?.profile_image ? (
                         <Image
                             source={{
-                                uri: `${API_URL}${user.profile_image}`,
+                                uri: user.profile_image,
                             }}
                             style={styles.avatarImage}
                         />

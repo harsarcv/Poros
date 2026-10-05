@@ -186,6 +186,7 @@ export default function AppLayout() {
         name="project-detail"
         options={{
           href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -193,6 +194,7 @@ export default function AppLayout() {
         name="task-detail"
         options={{
           href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -200,6 +202,7 @@ export default function AppLayout() {
         name="create-project"
         options={{
           href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -207,6 +210,7 @@ export default function AppLayout() {
         name="create-task"
         options={{
           href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -214,6 +218,7 @@ export default function AppLayout() {
         name="security"
         options={{
           href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -221,6 +226,7 @@ export default function AppLayout() {
         name="edit-profile"
         options={{
           href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 

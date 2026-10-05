@@ -16,6 +16,7 @@ import {
 
 import { API_URL } from '../../constants/api';
 import { getToken } from '../../utils/storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateProjectScreen() {
     const { id } = useLocalSearchParams();
@@ -267,188 +268,193 @@ export default function CreateProjectScreen() {
     // ==========================================
 
     return (
-        <ScrollView
+        <SafeAreaView
             style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
+            edges={['bottom']}
         >
-            {/* HEADER */}
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* HEADER */}
 
-            <View style={styles.header}>
-                <Pressable
-                    onPress={() => router.replace('/(app)/projects')}
-                >
-                    <Text style={styles.back}>
-                        ‹
-                    </Text>
-                </Pressable>
-
-                <View>
-                    <Text style={styles.title}>
-                        {isEditMode
-                            ? 'Edit Proyek'
-                            : 'Buat Proyek'}
-                    </Text>
-
-                    <Text
-                        style={styles.subtitle}
-                    >
-                        {isEditMode
-                            ? 'Perbarui informasi proyek.'
-                            : 'Tambahkan proyek baru ke POROS.'}
-                    </Text>
-                </View>
-            </View>
-
-            {/* FORM */}
-
-            <View style={styles.form}>
-                {/* NAMA */}
-
-                <Text style={styles.label}>
-                    Nama Proyek
-                </Text>
-
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contoh: Website Perusahaan"
-                    placeholderTextColor="#94A3B8"
-                    value={name}
-                    onChangeText={setName}
-                />
-
-                {/* DESKRIPSI */}
-
-                <Text style={styles.label}>
-                    Deskripsi
-                </Text>
-
-                <TextInput
-                    style={[
-                        styles.input,
-                        styles.textArea,
-                    ]}
-                    placeholder="Masukkan deskripsi proyek"
-                    placeholderTextColor="#94A3B8"
-                    multiline
-                    textAlignVertical="top"
-                    value={description}
-                    onChangeText={setDescription}
-                />
-
-                {/* DEADLINE */}
-
-                <Text style={styles.label}>
-                    Deadline
-                </Text>
-
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contoh: 2026-10-30"
-                    placeholderTextColor="#94A3B8"
-                    value={deadline}
-                    onChangeText={setDeadline}
-                />
-
-                {/* STATUS */}
-
-                <Text style={styles.label}>
-                    Status Proyek
-                </Text>
-
-                <View
-                    style={
-                        styles.statusContainer
-                    }
-                >
-                    {/* AKTIF */}
-
+                <View style={styles.header}>
                     <Pressable
-                        style={
-                            status === 'AKTIF'
-                                ? styles.statusActive
-                                : styles.statusOption
-                        }
-                        onPress={() =>
-                            setStatus('AKTIF')
-                        }
+                        onPress={() => router.replace('/(app)/projects')}
                     >
-                        <Text
-                            style={
-                                status === 'AKTIF'
-                                    ? styles.statusActiveText
-                                    : styles.statusText
-                            }
-                        >
-                            AKTIF
+                        <Text style={styles.back}>
+                            ‹
                         </Text>
                     </Pressable>
 
-                    {/* SELESAI */}
-
-                    <Pressable
-                        style={
-                            status === 'SELESAI'
-                                ? styles.statusActive
-                                : styles.statusOption
-                        }
-                        onPress={() =>
-                            setStatus('SELESAI')
-                        }
-                    >
-                        <Text
-                            style={
-                                status === 'SELESAI'
-                                    ? styles.statusActiveText
-                                    : styles.statusText
-                            }
-                        >
-                            SELESAI
+                    <View>
+                        <Text style={styles.title}>
+                            {isEditMode
+                                ? 'Edit Proyek'
+                                : 'Buat Proyek'}
                         </Text>
-                    </Pressable>
-                </View>
 
-                {/* ERROR */}
-
-                {error ? (
-                    <View
-                        style={styles.errorBox}
-                    >
                         <Text
-                            style={styles.errorText}
+                            style={styles.subtitle}
                         >
-                            {error}
+                            {isEditMode
+                                ? 'Perbarui informasi proyek.'
+                                : 'Tambahkan proyek baru ke POROS.'}
                         </Text>
                     </View>
-                ) : null}
+                </View>
 
-                {/* SAVE BUTTON */}
+                {/* FORM */}
 
-                <Pressable
-                    style={[
-                        styles.saveButton,
-                        loading &&
-                        styles.buttonDisabled,
-                    ]}
-                    onPress={
-                        handleSaveProject
-                    }
-                    disabled={loading}
-                >
-                    <Text
+                <View style={styles.form}>
+                    {/* NAMA */}
+
+                    <Text style={styles.label}>
+                        Nama Proyek
+                    </Text>
+
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Contoh: Website Perusahaan"
+                        placeholderTextColor="#94A3B8"
+                        value={name}
+                        onChangeText={setName}
+                    />
+
+                    {/* DESKRIPSI */}
+
+                    <Text style={styles.label}>
+                        Deskripsi
+                    </Text>
+
+                    <TextInput
+                        style={[
+                            styles.input,
+                            styles.textArea,
+                        ]}
+                        placeholder="Masukkan deskripsi proyek"
+                        placeholderTextColor="#94A3B8"
+                        multiline
+                        textAlignVertical="top"
+                        value={description}
+                        onChangeText={setDescription}
+                    />
+
+                    {/* DEADLINE */}
+
+                    <Text style={styles.label}>
+                        Deadline
+                    </Text>
+
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Contoh: 2026-10-30"
+                        placeholderTextColor="#94A3B8"
+                        value={deadline}
+                        onChangeText={setDeadline}
+                    />
+
+                    {/* STATUS */}
+
+                    <Text style={styles.label}>
+                        Status Proyek
+                    </Text>
+
+                    <View
                         style={
-                            styles.saveButtonText
+                            styles.statusContainer
                         }
                     >
-                        {loading
-                            ? 'Menyimpan...'
-                            : isEditMode
-                                ? 'Simpan Perubahan'
-                                : 'Simpan Proyek'}
-                    </Text>
-                </Pressable>
-            </View>
-        </ScrollView>
+                        {/* AKTIF */}
+
+                        <Pressable
+                            style={
+                                status === 'AKTIF'
+                                    ? styles.statusActive
+                                    : styles.statusOption
+                            }
+                            onPress={() =>
+                                setStatus('AKTIF')
+                            }
+                        >
+                            <Text
+                                style={
+                                    status === 'AKTIF'
+                                        ? styles.statusActiveText
+                                        : styles.statusText
+                                }
+                            >
+                                AKTIF
+                            </Text>
+                        </Pressable>
+
+                        {/* SELESAI */}
+
+                        <Pressable
+                            style={
+                                status === 'SELESAI'
+                                    ? styles.statusActive
+                                    : styles.statusOption
+                            }
+                            onPress={() =>
+                                setStatus('SELESAI')
+                            }
+                        >
+                            <Text
+                                style={
+                                    status === 'SELESAI'
+                                        ? styles.statusActiveText
+                                        : styles.statusText
+                                }
+                            >
+                                SELESAI
+                            </Text>
+                        </Pressable>
+                    </View>
+
+                    {/* ERROR */}
+
+                    {error ? (
+                        <View
+                            style={styles.errorBox}
+                        >
+                            <Text
+                                style={styles.errorText}
+                            >
+                                {error}
+                            </Text>
+                        </View>
+                    ) : null}
+
+                    {/* SAVE BUTTON */}
+
+                    <Pressable
+                        style={[
+                            styles.saveButton,
+                            loading &&
+                            styles.buttonDisabled,
+                        ]}
+                        onPress={
+                            handleSaveProject
+                        }
+                        disabled={loading}
+                    >
+                        <Text
+                            style={
+                                styles.saveButtonText
+                            }
+                        >
+                            {loading
+                                ? 'Menyimpan...'
+                                : isEditMode
+                                    ? 'Simpan Perubahan'
+                                    : 'Simpan Proyek'}
+                        </Text>
+                    </Pressable>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 

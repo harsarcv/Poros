@@ -77,9 +77,7 @@ export default function EditProfileScreen() {
             setRole(data.role || '');
 
             setProfileImage(
-                data.profile_image
-                    ? `${API_URL}${data.profile_image}`
-                    : null
+                data.profile_image || null
             );
         } catch (error) {
             console.error(

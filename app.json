@@ -26,8 +26,17 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "image": "./assets/splashscreen_logo.png",
-          "imageWidth": 350
+          "image": "./assets/poros-logo.png",
+          "imageWidth": 110
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "backgroundColor": "#000000",
+          "barStyle": "light",
+          "borderColor": "#000000",
+          "position": "relative"
         }
       ]
     ],

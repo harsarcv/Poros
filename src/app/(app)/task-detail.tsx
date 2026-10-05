@@ -24,6 +24,7 @@ import {
   getToken,
   getUser,
 } from '../../utils/storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TaskDetail() {
   const { id, from } = useLocalSearchParams();
@@ -727,10 +728,11 @@ export default function TaskDetail() {
     );
   };
 
-  return (
-    <View
-      style={styles.container}
-    >
+    return (
+        <SafeAreaView
+            style={styles.container}
+            edges={['bottom']}
+        >
 
       {/* HEADER */}
 
@@ -1191,7 +1193,7 @@ export default function TaskDetail() {
         </View>
       </Modal>
 
-    </View>
+    </SafeAreaView>
   );
 }
 
