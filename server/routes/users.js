@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const bcrypt = require("bcryptjs");
 
 const db = require("../db");
@@ -13,46 +11,16 @@ const authMiddleware = require("../middleware/authMiddleware");
 // MULTER - PROFILE IMAGE
 // ==========================================
 
-const uploadDir = path.join(
-    __dirname,
-    "../uploads/profiles"
-);
-
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, {
-        recursive: true,
-    });
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-
-    filename: (req, file, cb) => {
-        const extension = path.extname(
-            file.originalname
-        );
-
-        const filename =
-            `profile-${req.user.id}-${Date.now()}${extension}`;
-
-        cb(null, filename);
-    },
-});
+const cloudinary = require("../cloudinary");
 
 const upload = multer({
-    storage,
+    storage: multer.memoryStorage(),
 
     limits: {
         fileSize: 5 * 1024 * 1024,
     },
 
-    fileFilter: (
-        req,
-        file,
-        cb
-    ) => {
+    fileFilter: (req, file, cb) => {
         const allowedTypes = [
             "image/jpeg",
             "image/png",
@@ -60,11 +28,7 @@ const upload = multer({
             "image/webp",
         ];
 
-        if (
-            allowedTypes.includes(
-                file.mimetype
-            )
-        ) {
+        if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
             cb(
@@ -174,22 +138,44 @@ router.put("/me", authMiddleware, async (req, res) => {
 // ==========================================
 
 router.put(
-    "/me/photo",
-    authMiddleware,
-    upload.single("profile_image"),
-    async (req, res) => {
-        try {
-            if (!req.file) {
-                return res.status(400).json({
-                    message: "Foto profil belum dipilih",
-                });
-            }
+  "/me/photo",
+  authMiddleware,
+  upload.single("profile_image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Foto profil belum dipilih",
+        });
+      }
 
-            const profileImage =
-                `/uploads/profiles/${req.file.filename}`;
+      const uploadResult =
+        await new Promise((resolve, reject) => {
+          const stream =
+            cloudinary.uploader.upload_stream(
+              {
+                folder: "poros/profile",
+                public_id: `profile-${req.user.id}`,
+                overwrite: true,
+                resource_type: "image",
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
+                }
+              }
+            );
 
-            const result = await db.query(
-                `
+          stream.end(req.file.buffer);
+        });
+
+      const profileImage =
+        uploadResult.secure_url;
+
+      const result = await db.query(
+        `
         UPDATE users
         SET profile_image = $1
         WHERE id = $2
@@ -201,36 +187,36 @@ router.put(
           profile_image,
           created_at
         `,
-                [
-                    profileImage,
-                    req.user.id,
-                ]
-            );
+        [
+          profileImage,
+          req.user.id,
+        ]
+      );
 
-            if (result.rows.length === 0) {
-                return res.status(404).json({
-                    message:
-                        "User tidak ditemukan",
-                });
-            }
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          message: "User tidak ditemukan",
+        });
+      }
 
-            res.json({
-                message:
-                    "Foto profil berhasil diperbarui",
-                user: result.rows[0],
-            });
-        } catch (error) {
-            console.error(
-                "UPLOAD PROFILE IMAGE ERROR:",
-                error
-            );
+      res.json({
+        message:
+          "Foto profil berhasil diperbarui",
+        user: result.rows[0],
+      });
 
-            res.status(500).json({
-                message:
-                    "Gagal mengupload foto profil",
-            });
-        }
+    } catch (error) {
+      console.error(
+        "UPLOAD PROFILE IMAGE ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Gagal mengupload foto profil",
+      });
     }
+  }
 );
 
 // ==========================================
