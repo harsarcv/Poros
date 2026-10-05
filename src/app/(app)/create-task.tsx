@@ -579,22 +579,19 @@ export default function CreateTaskScreen() {
                         ].map((status) => (
                             <Pressable
                                 key={status}
-                                style={
-                                    selectedStatus ===
-                                        status
+                                style={[
+                                    selectedStatus === status
                                         ? styles.optionActive
-                                        : styles.option
-                                }
+                                        : styles.option,
+                                    status === 'IN PROGRESS' && styles.optionWide,
+                                ]}
                                 onPress={() =>
-                                    setSelectedStatus(
-                                        status
-                                    )
+                                    setSelectedStatus(status)
                                 }
                             >
                                 <Text
                                     style={
-                                        selectedStatus ===
-                                            status
+                                        selectedStatus === status
                                             ? styles.optionActiveText
                                             : styles.optionText
                                     }
@@ -988,5 +985,8 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '700',
         color: '#475569',
+    },
+    optionWide: {
+        flex: 1.2,
     },
 });

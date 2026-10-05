@@ -34,7 +34,7 @@
         "expo-navigation-bar",
         {
           "backgroundColor": "#000000",
-          "barStyle": "light",
+          "style": "light",
           "borderColor": "#000000",
           "position": "relative"
         }
