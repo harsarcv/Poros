@@ -10,8 +10,10 @@ import {
   getUser,
 } from '../../utils/storage';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AppLayout() {
+  const insets = useSafeAreaInsets();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -80,9 +82,9 @@ export default function AppLayout() {
         tabBarInactiveTintColor: '#94A3B8',
 
         tabBarStyle: {
-          height: 64,
+          height: 64 + insets.bottom,
           paddingTop: 8,
-          paddingBottom: 8,
+          paddingBottom: insets.bottom + 8,
           borderTopColor: '#E2E8F0',
           backgroundColor: '#FFFFFF',
         },
