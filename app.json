@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Poros",
+    "slug": "poros",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/poros-icon.png",
+    "scheme": "poros",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.harsarcv.poros",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/poros-icon.png",
+        "monochromeImage": "./assets/poros-icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/poros-icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9b308599-408f-4fb4-ae3d-46acc693f8ec"
+      }
+    }
+  }
+}
