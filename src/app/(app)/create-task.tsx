@@ -573,7 +573,7 @@ export default function CreateTaskScreen() {
                     <View style={styles.options}>
                         {[
                             'TODO',
-                            'IN PROGRESS',
+                            'PROGRESS',
                             'REVIEW',
                             'DONE',
                         ].map((status) => (
@@ -583,7 +583,7 @@ export default function CreateTaskScreen() {
                                     selectedStatus === status
                                         ? styles.optionActive
                                         : styles.option,
-                                    status === 'IN PROGRESS' && styles.optionWide,
+                                    status === 'PROGRESS' && styles.optionWide,
                                 ]}
                                 onPress={() =>
                                     setSelectedStatus(status)
@@ -908,13 +908,13 @@ const styles = StyleSheet.create({
     },
 
     optionText: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '600',
         color: '#64748B',
     },
 
     optionActiveText: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '600',
         color: '#FFFFFF',
     },
