@@ -120,7 +120,12 @@ export default function CreateTaskScreen() {
                     );
                 }
 
-                setMembers(memberData);
+                const memberList = memberData.filter(
+                    (member: any) =>
+                        String(member.role || '').toUpperCase() === 'MEMBER'
+                );
+
+                setMembers(memberList);
             } catch (error) {
                 console.error('FETCH INITIAL DATA ERROR:', error);
 
