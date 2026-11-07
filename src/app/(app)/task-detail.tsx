@@ -1,6 +1,6 @@
 import {
-  Alert,
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -20,11 +20,11 @@ import { useCallback, useState } from 'react';
 
 import { API_URL } from '../../constants/api';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   getToken,
   getUser,
 } from '../../utils/storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TaskDetail() {
   const { id, from } = useLocalSearchParams();
@@ -79,7 +79,6 @@ export default function TaskDetail() {
 
   const fetchTask = async () => {
     try {
-      setLoading(true);
 
       const token = await getToken();
       const currentUser = await getUser();

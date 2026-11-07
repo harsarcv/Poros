@@ -6,8 +6,8 @@ import {
     View,
 } from 'react-native';
 
-import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 import { API_URL } from '../../constants/api';
 import { getToken } from '../../utils/storage';
@@ -20,7 +20,6 @@ export default function ActivityScreen() {
         useCallback(() => {
             const fetchActivities = async () => {
                 try {
-                    setLoading(true);
 
                     const token = await getToken();
 

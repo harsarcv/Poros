@@ -1,17 +1,17 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
+    ActivityIndicator,
+    Image,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
-    ActivityIndicator,
-    Image,
 } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { clearSession, getToken } from '../../utils/storage';
 import { API_URL } from '../../constants/api';
-import { Ionicons } from '@expo/vector-icons';
+import { clearSession, getToken } from '../../utils/storage';
 
 export default function ProfileScreen() {
     const [user, setUser] = useState<any>(null);
@@ -21,7 +21,6 @@ export default function ProfileScreen() {
         useCallback(() => {
             const loadUser = async () => {
                 try {
-                    setLoading(true);
 
                     const token = await getToken();
 

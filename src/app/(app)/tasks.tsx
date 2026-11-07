@@ -29,7 +29,6 @@ export default function TasksScreen() {
         useCallback(() => {
             const fetchTasks = async () => {
                 try {
-                    setLoading(true);
 
                     const token = await getToken();
                     const currentUser = await getUser();
