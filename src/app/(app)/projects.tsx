@@ -24,7 +24,6 @@ export default function ProjectsScreen() {
         useCallback(() => {
             const fetchProjects = async () => {
                 try {
-                    setLoading(true);
 
                     const token = await getToken();
                     const currentUser = await getUser();

@@ -1,14 +1,14 @@
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
+    Image,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
-    Image,
 } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
 import { API_URL } from '../../constants/api';
 import { getToken, getUser } from '../../utils/storage';
 
@@ -50,7 +50,6 @@ export default function DashboardScreen() {
 
     const loadDashboard = async () => {
         try {
-            setLoading(true);
 
             const token = await getToken();
 
