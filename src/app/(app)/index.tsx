@@ -9,6 +9,7 @@ import {
     Text,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '../../constants/api';
 import { getToken, getUser } from '../../utils/storage';
 
@@ -50,7 +51,6 @@ export default function DashboardScreen() {
 
     const loadDashboard = async () => {
         try {
-
             const token = await getToken();
 
             if (!token) {
@@ -71,9 +71,7 @@ export default function DashboardScreen() {
                 );
 
                 if (userResponse.ok) {
-                    const latestUser =
-                        await userResponse.json();
-
+                    const latestUser = await userResponse.json();
                     setUser(latestUser);
                 } else {
                     setUser(currentUser);
@@ -83,10 +81,10 @@ export default function DashboardScreen() {
                     'Gagal mengambil data user terbaru:',
                     error
                 );
-
                 setUser(currentUser);
             }
 
+            // AMBIL DATA PROJECT
             const projectResponse = await fetch(
                 `${API_URL}/api/projects`,
                 {
@@ -102,15 +100,14 @@ export default function DashboardScreen() {
 
             const projectData = await projectResponse.json();
 
-            setProjects(
-                Array.isArray(projectData)
-                    ? projectData
-                    : []
-            );
+            const safeProjectData = Array.isArray(projectData)
+                ? projectData
+                : [];
 
+            // AMBIL TASK DARI SETIAP PROJECT
             const allTasks: Task[] = [];
 
-            for (const project of projectData) {
+            for (const project of safeProjectData) {
                 try {
                     const taskResponse = await fetch(
                         `${API_URL}/api/projects/${project.id}/tasks`,
@@ -123,11 +120,14 @@ export default function DashboardScreen() {
 
                     if (taskResponse.ok) {
                         const taskData = await taskResponse.json();
-
                         if (Array.isArray(taskData)) {
                             const projectTasks = taskData.map(
                                 (task: Task) => ({
                                     ...task,
+
+                                    // Pastikan setiap task memiliki project_id
+                                    project_id: project.id,
+
                                     project_name: project.name,
                                 })
                             );
@@ -143,6 +143,38 @@ export default function DashboardScreen() {
                 }
             }
 
+            // HITUNG PROGRESS SETIAP PROJECT
+            const projectsWithProgress: Project[] =
+                safeProjectData.map((project: any) => {
+                    const projectTasks = allTasks.filter(
+                        (task) =>
+                            Number(task.project_id) ===
+                            Number(project.id)
+                    );
+
+                    const totalTasks = projectTasks.length;
+
+                    const completedTasks = projectTasks.filter(
+                        (task) =>
+                            String(task.status).toUpperCase() === 'DONE'
+                    ).length;
+
+                    const progress =
+                        totalTasks > 0
+                            ? Math.round(
+                                (completedTasks / totalTasks) * 100
+                            )
+                            : 0;
+
+                    return {
+                        ...project,
+                        total_tasks: totalTasks,
+                        completed_tasks: completedTasks,
+                        progress,
+                    };
+                });
+
+            setProjects(projectsWithProgress);
             setTasks(allTasks);
         } catch (error) {
             console.error('DASHBOARD ERROR:', error);
@@ -166,18 +198,9 @@ export default function DashboardScreen() {
         const day = Number(parts[2]);
 
         const months = [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'Mei',
-            'Jun',
-            'Jul',
-            'Agu',
-            'Sep',
-            'Okt',
-            'Nov',
-            'Des',
+            'Jan', 'Feb', 'Mar', 'Apr',
+            'Mei', 'Jun', 'Jul', 'Agu',
+            'Sep', 'Okt', 'Nov', 'Des',
         ];
 
         return `${day} ${months[month - 1]} ${year}`;
@@ -187,13 +210,10 @@ export default function DashboardScreen() {
         switch (priority) {
             case 'TINGGI':
                 return 'Tinggi';
-
             case 'SEDANG':
                 return 'Sedang';
-
             case 'RENDAH':
                 return 'Rendah';
-
             default:
                 return priority || '-';
         }
@@ -203,13 +223,10 @@ export default function DashboardScreen() {
         switch (priority) {
             case 'TINGGI':
                 return styles.priorityHigh;
-
             case 'SEDANG':
                 return styles.priorityMedium;
-
             case 'RENDAH':
                 return styles.priorityLow;
-
             default:
                 return styles.priorityDefault;
         }
@@ -219,13 +236,10 @@ export default function DashboardScreen() {
         switch (priority) {
             case 'TINGGI':
                 return styles.priorityHighText;
-
             case 'SEDANG':
                 return styles.priorityMediumText;
-
             case 'RENDAH':
                 return styles.priorityLowText;
-
             default:
                 return styles.priorityDefaultText;
         }
@@ -235,16 +249,12 @@ export default function DashboardScreen() {
         switch (status) {
             case 'TODO':
                 return 'To Do';
-
             case 'IN PROGRESS':
                 return 'In Progress';
-
             case 'REVIEW':
                 return 'Review';
-
             case 'DONE':
                 return 'Selesai';
-
             default:
                 return status || '-';
         }
@@ -259,14 +269,12 @@ export default function DashboardScreen() {
 
     const isMember = role === 'MEMBER';
 
-    // =========================
     // STATISTIK UMUM
-    // =========================
-
     const totalProjects = projects.length;
 
     const activeProjects = projects.filter(
-        (project) => project.status !== 'SELESAI'
+        (project) =>
+            String(project.status || '').toUpperCase() !== 'SELESAI'
     );
 
     const totalTasks = tasks.length;
@@ -283,10 +291,7 @@ export default function DashboardScreen() {
         (task) => task.status === 'REVIEW'
     ).length;
 
-    // =========================
     // TASK MEMBER
-    // =========================
-
     const myTasks = tasks.filter(
         (task) =>
             Number(task.assigned_to) === Number(user?.id)
@@ -302,16 +307,10 @@ export default function DashboardScreen() {
 
     const visibleTasks = myActiveTasks.slice(0, 3);
 
-    // =========================
     // PROJECT
-    // =========================
-
     const latestProjects = activeProjects.slice(0, 2);
 
-    // =========================
     // ADMIN TASK
-    // =========================
-
     const adminAttentionTasks = tasks
         .filter((task) => task.status === 'REVIEW')
         .sort((a, b) => {
@@ -332,7 +331,6 @@ export default function DashboardScreen() {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" />
-
                 <Text style={styles.loadingText}>
                     Memuat beranda...
                 </Text>
@@ -341,746 +339,649 @@ export default function DashboardScreen() {
     }
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-        >
-            {/* =========================
-                HEADER
-            ========================= */}
-
-            <View style={styles.header}>
-                <View style={styles.headerInfo}>
-
-
-                    <Text style={styles.name}>
-                        {user?.name || 'Pengguna'}
-                    </Text>
-
-                    <View style={styles.roleBadge}>
-                        <Text style={styles.roleBadgeText}>
-                            {isAdmin
-                                ? role === 'MANAGER'
-                                    ? 'MANAGER'
-                                    : 'ADMIN'
-                                : 'MEMBER'}
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* HEADER */}
+                <View style={styles.header}>
+                    <View style={styles.headerInfo}>
+                        <Text style={styles.name}>
+                            {user?.name || 'Pengguna'}
                         </Text>
+
+                        <View style={styles.roleBadge}>
+                            <Text style={styles.roleBadgeText}>
+                                {isAdmin
+                                    ? role === 'MANAGER'
+                                        ? 'MANAGER'
+                                        : 'ADMIN'
+                                    : 'MEMBER'}
+                            </Text>
+                        </View>
                     </View>
+
+                    <Pressable
+                        style={styles.avatar}
+                        onPress={() =>
+                            router.push('/(app)/profile')
+                        }
+                    >
+                        {user?.profile_image ? (
+                            <Image
+                                source={{
+                                    uri: user.profile_image,
+                                }}
+                                style={styles.avatarImage}
+                            />
+                        ) : (
+                            <Text style={styles.avatarText}>
+                                {user?.name
+                                    ?.charAt(0)
+                                    ?.toUpperCase() || '?'}
+                            </Text>
+                        )}
+                    </Pressable>
                 </View>
 
-                <Pressable
-                    style={styles.avatar}
-                    onPress={() =>
-                        router.push('/(app)/profile')
-                    }
-                >
-                    {user?.profile_image ? (
-                        <Image
-                            source={{
-                                uri: user.profile_image,
-                            }}
-                            style={styles.avatarImage}
-                        />
-                    ) : (
-                        <Text style={styles.avatarText}>
-                            {user?.name
-                                ?.charAt(0)
-                                ?.toUpperCase() || '?'}
-                        </Text>
-                    )}
-                </Pressable>
-            </View>
+                {/* DASHBOARD ADMIN / MANAGER */}
+                {isAdmin && (
+                    <>
+                        {/* SUMMARY ADMIN */}
+                        <View style={styles.summary}>
+                            <Text style={styles.summaryTitle}>
+                                Ringkasan Proyek
+                            </Text>
 
-            {/* =================================================
-                DASHBOARD ADMIN / MANAGER
-            ================================================= */}
+                            <View style={styles.stats}>
+                                <View style={styles.statCard}>
+                                    <Text style={styles.statNumber}>
+                                        {totalProjects}
+                                    </Text>
+                                    <Text style={styles.statLabel}>
+                                        Total Proyek
+                                    </Text>
+                                </View>
 
-            {isAdmin && (
-                <>
-                    {/* SUMMARY ADMIN */}
+                                <View style={styles.statCard}>
+                                    <Text style={styles.statNumber}>
+                                        {totalTasks}
+                                    </Text>
+                                    <Text style={styles.statLabel}>
+                                        Total Tugas
+                                    </Text>
+                                </View>
 
-                    <View style={styles.summary}>
-                        <Text style={styles.summaryTitle}>
-                            Ringkasan Proyek
-                        </Text>
+                                <View style={styles.statCard}>
+                                    <Text style={styles.statNumber}>
+                                        {completedTasks}
+                                    </Text>
+                                    <Text style={styles.statLabel}>
+                                        Tugas Selesai
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
 
-                        <View style={styles.stats}>
-                            <View style={styles.statCard}>
+                        {/* STATUS TUGAS */}
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>
+                                Status Tugas
+                            </Text>
+                        </View>
 
-                                <Text style={styles.statNumber}>
-                                    {totalProjects}
+                        <View style={styles.statusGrid}>
+                            <View style={styles.statusCard}>
+                                <Text style={styles.statusNumber}>
+                                    {inProgressTasks}
                                 </Text>
-
-                                <Text style={styles.statLabel}>
-                                    Total Proyek
+                                <Text style={styles.statusLabel}>
+                                    In Progress
                                 </Text>
                             </View>
 
-                            <View style={styles.statCard}>
-
-                                <Text style={styles.statNumber}>
-                                    {totalTasks}
+                            <View style={styles.statusCard}>
+                                <Text style={styles.statusNumber}>
+                                    {reviewTasks}
                                 </Text>
-
-                                <Text style={styles.statLabel}>
-                                    Total Tugas
+                                <Text style={styles.statusLabel}>
+                                    Review
                                 </Text>
                             </View>
 
-                            <View style={styles.statCard}>
-
-                                <Text style={styles.statNumber}>
+                            <View style={styles.statusCard}>
+                                <Text style={styles.statusNumber}>
                                     {completedTasks}
                                 </Text>
-
-                                <Text style={styles.statLabel}>
-                                    Tugas Selesai
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* STATUS TUGAS */}
-
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            Status Tugas
-                        </Text>
-                    </View>
-
-                    <View style={styles.statusGrid}>
-                        <View style={styles.statusCard}>
-                            <Text style={styles.statusNumber}>
-                                {inProgressTasks}
-                            </Text>
-
-                            <Text style={styles.statusLabel}>
-                                In Progress
-                            </Text>
-                        </View>
-
-                        <View style={styles.statusCard}>
-                            <Text style={styles.statusNumber}>
-                                {reviewTasks}
-                            </Text>
-
-                            <Text style={styles.statusLabel}>
-                                Review
-                            </Text>
-                        </View>
-
-                        <View style={styles.statusCard}>
-                            <Text style={styles.statusNumber}>
-                                {completedTasks}
-                            </Text>
-
-                            <Text style={styles.statusLabel}>
-                                Selesai
-                            </Text>
-                        </View>
-                    </View>
-
-                    {/* PROYEK AKTIF */}
-
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            Proyek Aktif
-                        </Text>
-
-                        <Pressable
-                            onPress={() =>
-                                router.push('/(app)/projects')
-                            }
-                        >
-                            <Text style={styles.seeAll}>
-                                Lihat Semua Proyek
-                            </Text>
-                        </Pressable>
-                    </View>
-
-                    {latestProjects.length === 0 ? (
-                        <View style={styles.emptyCard}>
-                            <Text style={styles.emptyTitle}>
-                                Belum ada proyek aktif
-                            </Text>
-
-                            <Text style={styles.emptyText}>
-                                Buat proyek baru untuk mulai mengelola pekerjaan tim.
-                            </Text>
-
-                            <Pressable
-                                style={styles.emptyButton}
-                                onPress={() =>
-                                    router.push(
-                                        '/(app)/create-project'
-                                    )
-                                }
-                            >
-                                <Text style={styles.emptyButtonText}>
-                                    Buat Proyek
-                                </Text>
-                            </Pressable>
-                        </View>
-                    ) : (
-                        latestProjects.map((project) => (
-                            <Pressable
-                                key={project.id}
-                                style={styles.projectCard}
-                                onPress={() =>
-                                    router.push({
-                                        pathname:
-                                            '/(app)/project-detail',
-                                        params: {
-                                            id: String(project.id),
-                                        },
-                                    })
-                                }
-                            >
-                                <View style={styles.projectTop}>
-                                    <View style={styles.projectInfo}>
-                                        <Text
-                                            style={styles.projectName}
-                                            numberOfLines={1}
-                                        >
-                                            {project.name}
-                                        </Text>
-
-                                        <Text
-                                            style={styles.projectDescription}
-                                            numberOfLines={2}
-                                        >
-                                            {project.description ||
-                                                'Tidak ada deskripsi proyek'}
-                                        </Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.progressHeader}>
-                                    <Text
-                                        style={
-                                            styles.progressLabel
-                                        }
-                                    >
-                                        Kemajuan
-                                    </Text>
-
-                                    <Text
-                                        style={
-                                            styles.progressValue
-                                        }
-                                    >
-                                        {project.progress || 0}%
-                                    </Text>
-                                </View>
-
-                                <View
-                                    style={
-                                        styles.progressBackground
-                                    }
-                                >
-                                    <View
-                                        style={[
-                                            styles.progressBar,
-                                            {
-                                                width: `${Math.min(
-                                                    Math.max(
-                                                        project.progress ||
-                                                        0,
-                                                        0
-                                                    ),
-                                                    100
-                                                )}%`,
-                                            },
-                                        ]}
-                                    />
-                                </View>
-
-                                <View
-                                    style={styles.projectFooter}
-                                >
-                                    <Text
-                                        style={styles.taskCount}
-                                    >
-                                        {project.completed_tasks ||
-                                            0}{' '}
-                                        dari{' '}
-                                        {project.total_tasks ||
-                                            0}{' '}
-                                        tugas selesai
-                                    </Text>
-
-                                    <Text
-                                        style={styles.deadline}
-                                    >
-                                        {formatDeadline(
-                                            project.deadline
-                                        )}
-                                    </Text>
-                                </View>
-                            </Pressable>
-                        ))
-                    )}
-
-                    {/* TUGAS YANG PERLU DIPERHATIKAN */}
-
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            Tugas Perlu Perhatian
-                        </Text>
-
-                        <Pressable
-                            onPress={() =>
-                                router.push('/(app)/tasks')
-                            }
-                        >
-                            <Text style={styles.seeAll}>
-                                Lihat Semua Tugas
-                            </Text>
-                        </Pressable>
-                    </View>
-
-                    {adminAttentionTasks.length === 0 ? (
-                        <View style={styles.emptyCard}>
-                            <Text style={styles.emptyTitle}>
-                                Belum ada tugas yang perlu di review
-                            </Text>
-
-                            <Text style={styles.emptyText}>
-                                Tidak ada tugas yang perlu diperhatikan saat ini.
-                            </Text>
-                        </View>
-                    ) : (
-                        adminAttentionTasks.map((task) => (
-                            <Pressable
-                                key={task.id}
-                                style={styles.taskCard}
-                                onPress={() =>
-                                    router.push({
-                                        pathname:
-                                            '/(app)/task-detail',
-                                        params: {
-                                            id: String(task.id),
-                                        },
-                                    })
-                                }
-                            >
-                                <View
-                                    style={[
-                                        styles.taskIndicator,
-                                        task.priority ===
-                                        'TINGGI' &&
-                                        styles.taskIndicatorHigh,
-                                        task.priority ===
-                                        'SEDANG' &&
-                                        styles.taskIndicatorMedium,
-                                        task.priority ===
-                                        'RENDAH' &&
-                                        styles.taskIndicatorLow,
-                                    ]}
-                                />
-
-                                <View style={styles.taskInfo}>
-                                    <Text
-                                        style={styles.taskTitle}
-                                        numberOfLines={1}
-                                    >
-                                        {task.title}
-                                    </Text>
-
-                                    <Text
-                                        style={styles.taskProject}
-                                        numberOfLines={1}
-                                    >
-                                        {task.project_name ||
-                                            'Tanpa proyek'}
-                                    </Text>
-
-                                    <View style={styles.taskMeta}>
-                                        <Text
-                                            style={
-                                                styles.taskStatus
-                                            }
-                                        >
-                                            {getStatusLabel(
-                                                task.status
-                                            )}
-                                        </Text>
-
-                                        {task.assigned_name && (
-                                            <Text
-                                                style={
-                                                    styles.taskDeadline
-                                                }
-                                            >
-                                                •{' '}
-                                                {
-                                                    task.assigned_name
-                                                }
-                                            </Text>
-                                        )}
-                                    </View>
-                                </View>
-
-                                <View
-                                    style={getPriorityStyle(
-                                        task.priority
-                                    )}
-                                >
-                                    <Text
-                                        style={getPriorityTextStyle(
-                                            task.priority
-                                        )}
-                                    >
-                                        {getPriorityLabel(
-                                            task.priority
-                                        )}
-                                    </Text>
-                                </View>
-                            </Pressable>
-                        ))
-                    )}
-                </>
-            )}
-
-            {/* =================================================
-                DASHBOARD MEMBER
-            ================================================= */}
-
-            {isMember && (
-                <>
-                    {/* SUMMARY MEMBER */}
-
-                    <View style={styles.summary}>
-                        <Text style={styles.summaryTitle}>
-                            Ringkasan Saya
-                        </Text>
-
-                        <View style={styles.stats}>
-                            <View style={styles.statCard}>
-
-                                <Text style={styles.statNumber}>
-                                    {totalProjects}
-                                </Text>
-
-                                <Text style={styles.statLabel}>
-                                    Proyek
-                                </Text>
-                            </View>
-
-                            <View style={styles.statCard}>
-
-                                <Text style={styles.statNumber}>
-                                    {myActiveTasks.length}
-                                </Text>
-
-                                <Text style={styles.statLabel}>
-                                    Tugas Aktif
-                                </Text>
-                            </View>
-
-                            <View style={styles.statCard}>
-
-                                <Text style={styles.statNumber}>
-                                    {myCompletedTasks.length}
-                                </Text>
-
-                                <Text style={styles.statLabel}>
+                                <Text style={styles.statusLabel}>
                                     Selesai
                                 </Text>
                             </View>
                         </View>
-                    </View>
 
-                    {/* TUGAS SAYA */}
-
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            Tugas Saya
-                        </Text>
-
-                        <Pressable
-                            onPress={() =>
-                                router.push('/(app)/my-tasks')
-                            }
-                        >
-                            <Text style={styles.seeAll}>
-                                Lihat Semua
-                            </Text>
-                        </Pressable>
-                    </View>
-
-                    {visibleTasks.length === 0 ? (
-                        <View style={styles.emptyCard}>
-                            <Text style={styles.emptyTitle}>
-                                Tidak ada tugas aktif
-                            </Text>
-
-                            <Text style={styles.emptyText}>
-                                Tugas yang diberikan kepada kamu akan muncul di sini.
+                        {/* PROYEK AKTIF */}
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>
+                                Proyek Aktif
                             </Text>
 
                             <Pressable
-                                style={styles.emptyButton}
                                 onPress={() =>
-                                    router.push('/(app)/my-tasks')
+                                    router.push('/(app)/projects')
                                 }
                             >
-                                <Text
-                                    style={
-                                        styles.emptyButtonText
-                                    }
-                                >
-                                    Lihat Tugas Saya
+                                <Text style={styles.seeAll}>
+                                    Lihat Semua Proyek
                                 </Text>
                             </Pressable>
                         </View>
-                    ) : (
-                        visibleTasks.map((task) => (
-                            <Pressable
-                                key={task.id}
-                                style={styles.taskCard}
-                                onPress={() =>
-                                    router.push({
-                                        pathname:
-                                            '/(app)/task-detail',
-                                        params: {
-                                            id: String(task.id),
-                                        },
-                                    })
-                                }
-                            >
-                                <View
-                                    style={[
-                                        styles.taskIndicator,
-                                        task.priority ===
-                                        'TINGGI' &&
-                                        styles.taskIndicatorHigh,
-                                        task.priority ===
-                                        'SEDANG' &&
-                                        styles.taskIndicatorMedium,
-                                        task.priority ===
-                                        'RENDAH' &&
-                                        styles.taskIndicatorLow,
-                                    ]}
-                                />
 
-                                <View style={styles.taskInfo}>
-                                    <Text
-                                        style={styles.taskTitle}
-                                        numberOfLines={1}
-                                    >
-                                        {task.title}
+                        {latestProjects.length === 0 ? (
+                            <View style={styles.emptyCard}>
+                                <Text style={styles.emptyTitle}>
+                                    Belum ada proyek aktif
+                                </Text>
+
+                                <Text style={styles.emptyText}>
+                                    Buat proyek baru untuk mulai
+                                    mengelola pekerjaan tim.
+                                </Text>
+
+                                <Pressable
+                                    style={styles.emptyButton}
+                                    onPress={() =>
+                                        router.push(
+                                            '/(app)/create-project'
+                                        )
+                                    }
+                                >
+                                    <Text style={styles.emptyButtonText}>
+                                        Buat Proyek
                                     </Text>
+                                </Pressable>
+                            </View>
+                        ) : (
+                            latestProjects.map((project) => (
+                                <Pressable
+                                    key={project.id}
+                                    style={styles.projectCard}
+                                    onPress={() =>
+                                        router.push({
+                                            pathname:
+                                                '/(app)/project-detail',
+                                            params: {
+                                                id: String(project.id),
+                                            },
+                                        })
+                                    }
+                                >
+                                    <View style={styles.projectTop}>
+                                        <View style={styles.projectInfo}>
+                                            <Text
+                                                style={styles.projectName}
+                                                numberOfLines={1}
+                                            >
+                                                {project.name}
+                                            </Text>
 
-                                    <Text
-                                        style={styles.taskProject}
-                                        numberOfLines={1}
+                                            <Text
+                                                style={styles.projectDescription}
+                                                numberOfLines={2}
+                                            >
+                                                {project.description ||
+                                                    'Tidak ada deskripsi proyek'}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.progressHeader}>
+                                        <Text style={styles.progressLabel}>
+                                            Kemajuan
+                                        </Text>
+
+                                        <Text style={styles.progressValue}>
+                                            {project.progress || 0}%
+                                        </Text>
+                                    </View>
+
+                                    <View
+                                        style={styles.progressBackground}
                                     >
-                                        {task.project_name ||
-                                            'Tanpa proyek'}
-                                    </Text>
+                                        <View
+                                            style={[
+                                                styles.progressBar,
+                                                {
+                                                    width: `${Math.min(
+                                                        Math.max(
+                                                            project.progress || 0,
+                                                            0
+                                                        ),
+                                                        100
+                                                    )}%`,
+                                                },
+                                            ]}
+                                        />
+                                    </View>
 
-                                    <View style={styles.taskMeta}>
-                                        <Text
-                                            style={
-                                                styles.taskStatus
-                                            }
-                                        >
-                                            {getStatusLabel(
-                                                task.status
+                                    <View style={styles.projectFooter}>
+                                        <Text style={styles.taskCount}>
+                                            {project.completed_tasks || 0}{' '}
+                                            dari{' '}
+                                            {project.total_tasks || 0}{' '}
+                                            tugas selesai
+                                        </Text>
+
+                                        <Text style={styles.deadline}>
+                                            {formatDeadline(
+                                                project.deadline
                                             )}
                                         </Text>
-
-                                        {task.deadline && (
-                                            <Text
-                                                style={
-                                                    styles.taskDeadline
-                                                }
-                                            >
-                                                •{' '}
-                                                {formatDeadline(
-                                                    task.deadline
-                                                )}
-                                            </Text>
-                                        )}
                                     </View>
-                                </View>
+                                </Pressable>
+                            ))
+                        )}
 
-                                <View
-                                    style={getPriorityStyle(
-                                        task.priority
-                                    )}
-                                >
-                                    <Text
-                                        style={getPriorityTextStyle(
-                                            task.priority
-                                        )}
-                                    >
-                                        {getPriorityLabel(
-                                            task.priority
-                                        )}
-                                    </Text>
-                                </View>
-                            </Pressable>
-                        ))
-                    )}
-
-                    {/* PROYEK MEMBER */}
-
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            Proyek Saya
-                        </Text>
-
-                        <Pressable
-                            onPress={() =>
-                                router.push('/(app)/projects')
-                            }
-                        >
-                            <Text style={styles.seeAll}>
-                                Lihat Semua
-                            </Text>
-                        </Pressable>
-                    </View>
-
-                    {latestProjects.length === 0 ? (
-                        <View style={styles.emptyCard}>
-                            <Text style={styles.emptyTitle}>
-                                Belum ada proyek
+                        {/* TUGAS YANG PERLU DIPERHATIKAN */}
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>
+                                Tugas Perlu Perhatian
                             </Text>
 
-                            <Text style={styles.emptyText}>
-                                Proyek yang kamu ikuti akan muncul di sini.
-                            </Text>
-                        </View>
-                    ) : (
-                        latestProjects.map((project) => (
                             <Pressable
-                                key={project.id}
-                                style={styles.projectCard}
                                 onPress={() =>
-                                    router.push({
-                                        pathname:
-                                            '/(app)/project-detail',
-                                        params: {
-                                            id: String(project.id),
-                                        },
-                                    })
+                                    router.push('/(app)/tasks')
                                 }
                             >
-                                <View style={styles.projectTop}>
-                                    <View style={styles.projectInfo}>
-                                        <Text
-                                            style={styles.projectName}
-                                            numberOfLines={1}
-                                        >
-                                            {project.name}
-                                        </Text>
+                                <Text style={styles.seeAll}>
+                                    Lihat Semua Tugas
+                                </Text>
+                            </Pressable>
+                        </View>
 
-                                        <Text
-                                            style={styles.projectDescription}
-                                            numberOfLines={2}
-                                        >
-                                            {project.description ||
-                                                'Tidak ada deskripsi proyek'}
-                                        </Text>
-                                    </View>
-                                </View>
+                        {adminAttentionTasks.length === 0 ? (
+                            <View style={styles.emptyCard}>
+                                <Text style={styles.emptyTitle}>
+                                    Belum ada tugas yang perlu di review
+                                </Text>
 
-                                <View style={styles.progressHeader}>
-                                    <Text
-                                        style={
-                                            styles.progressLabel
-                                        }
-                                    >
-                                        Kemajuan
-                                    </Text>
-
-                                    <Text
-                                        style={
-                                            styles.progressValue
-                                        }
-                                    >
-                                        {project.progress || 0}%
-                                    </Text>
-                                </View>
-
-                                <View
-                                    style={
-                                        styles.progressBackground
+                                <Text style={styles.emptyText}>
+                                    Tidak ada tugas yang perlu
+                                    diperhatikan saat ini.
+                                </Text>
+                            </View>
+                        ) : (
+                            adminAttentionTasks.map((task) => (
+                                <Pressable
+                                    key={task.id}
+                                    style={styles.taskCard}
+                                    onPress={() =>
+                                        router.push({
+                                            pathname:
+                                                '/(app)/task-detail',
+                                            params: {
+                                                id: String(task.id),
+                                            },
+                                        })
                                     }
                                 >
                                     <View
                                         style={[
-                                            styles.progressBar,
-                                            {
-                                                width: `${Math.min(
-                                                    Math.max(
-                                                        project.progress ||
-                                                        0,
-                                                        0
-                                                    ),
-                                                    100
-                                                )}%`,
-                                            },
+                                            styles.taskIndicator,
+                                            task.priority === 'TINGGI' &&
+                                            styles.taskIndicatorHigh,
+                                            task.priority === 'SEDANG' &&
+                                            styles.taskIndicatorMedium,
+                                            task.priority === 'RENDAH' &&
+                                            styles.taskIndicatorLow,
                                         ]}
                                     />
-                                </View>
 
-                                <View
-                                    style={styles.projectFooter}
-                                >
-                                    <Text
-                                        style={styles.taskCount}
-                                    >
-                                        {project.completed_tasks ||
-                                            0}{' '}
-                                        dari{' '}
-                                        {project.total_tasks ||
-                                            0}{' '}
-                                        tugas selesai
-                                    </Text>
+                                    <View style={styles.taskInfo}>
+                                        <Text
+                                            style={styles.taskTitle}
+                                            numberOfLines={1}
+                                        >
+                                            {task.title}
+                                        </Text>
 
-                                    <Text
-                                        style={styles.deadline}
-                                    >
-                                        {formatDeadline(
-                                            project.deadline
+                                        <Text
+                                            style={styles.taskProject}
+                                            numberOfLines={1}
+                                        >
+                                            {task.project_name ||
+                                                'Tanpa proyek'}
+                                        </Text>
+
+                                        <View style={styles.taskMeta}>
+                                            <Text style={styles.taskStatus}>
+                                                {getStatusLabel(task.status)}
+                                            </Text>
+
+                                            {task.assigned_name && (
+                                                <Text
+                                                    style={styles.taskDeadline}
+                                                >
+                                                    • {task.assigned_name}
+                                                </Text>
+                                            )}
+                                        </View>
+                                    </View>
+
+                                    <View
+                                        style={getPriorityStyle(
+                                            task.priority
                                         )}
+                                    >
+                                        <Text
+                                            style={getPriorityTextStyle(
+                                                task.priority
+                                            )}
+                                        >
+                                            {getPriorityLabel(
+                                                task.priority
+                                            )}
+                                        </Text>
+                                    </View>
+                                </Pressable>
+                            ))
+                        )}
+                    </>
+                )}
+
+                {/* DASHBOARD MEMBER */}
+                {isMember && (
+                    <>
+                        {/* SUMMARY MEMBER */}
+                        <View style={styles.summary}>
+                            <Text style={styles.summaryTitle}>
+                                Ringkasan Saya
+                            </Text>
+
+                            <View style={styles.stats}>
+                                <View style={styles.statCard}>
+                                    <Text style={styles.statNumber}>
+                                        {totalProjects}
+                                    </Text>
+                                    <Text style={styles.statLabel}>
+                                        Proyek
                                     </Text>
                                 </View>
+
+                                <View style={styles.statCard}>
+                                    <Text style={styles.statNumber}>
+                                        {myActiveTasks.length}
+                                    </Text>
+                                    <Text style={styles.statLabel}>
+                                        Tugas Aktif
+                                    </Text>
+                                </View>
+
+                                <View style={styles.statCard}>
+                                    <Text style={styles.statNumber}>
+                                        {myCompletedTasks.length}
+                                    </Text>
+                                    <Text style={styles.statLabel}>
+                                        Selesai
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* TUGAS SAYA */}
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>
+                                Tugas Saya
+                            </Text>
+
+                            <Pressable
+                                onPress={() =>
+                                    router.push('/(app)/my-tasks')
+                                }
+                            >
+                                <Text style={styles.seeAll}>
+                                    Lihat Semua
+                                </Text>
                             </Pressable>
-                        ))
-                    )}
-                </>
-            )}
+                        </View>
 
-            {/* ROLE TIDAK DIKENALI */}
+                        {visibleTasks.length === 0 ? (
+                            <View style={styles.emptyCard}>
+                                <Text style={styles.emptyTitle}>
+                                    Tidak ada tugas aktif
+                                </Text>
 
-            {!isAdmin && !isMember && (
-                <View style={styles.emptyCard}>
-                    <Text style={styles.emptyTitle}>
-                        Role belum dikenali
-                    </Text>
+                                <Text style={styles.emptyText}>
+                                    Tugas yang diberikan kepada kamu
+                                    akan muncul di sini.
+                                </Text>
 
-                    <Text style={styles.emptyText}>
-                        Silakan login kembali untuk memuat data akun.
-                    </Text>
+                                <Pressable
+                                    style={styles.emptyButton}
+                                    onPress={() =>
+                                        router.push('/(app)/my-tasks')
+                                    }
+                                >
+                                    <Text style={styles.emptyButtonText}>
+                                        Lihat Tugas Saya
+                                    </Text>
+                                </Pressable>
+                            </View>
+                        ) : (
+                            visibleTasks.map((task) => (
+                                <Pressable
+                                    key={task.id}
+                                    style={styles.taskCard}
+                                    onPress={() =>
+                                        router.push({
+                                            pathname:
+                                                '/(app)/task-detail',
+                                            params: {
+                                                id: String(task.id),
+                                            },
+                                        })
+                                    }
+                                >
+                                    <View
+                                        style={[
+                                            styles.taskIndicator,
+                                            task.priority === 'TINGGI' &&
+                                            styles.taskIndicatorHigh,
+                                            task.priority === 'SEDANG' &&
+                                            styles.taskIndicatorMedium,
+                                            task.priority === 'RENDAH' &&
+                                            styles.taskIndicatorLow,
+                                        ]}
+                                    />
 
-                    <Pressable
-                        style={styles.emptyButton}
-                        onPress={async () => {
-                            router.replace('/login');
-                        }}
-                    >
-                        <Text style={styles.emptyButtonText}>
-                            Kembali ke Login
+                                    <View style={styles.taskInfo}>
+                                        <Text
+                                            style={styles.taskTitle}
+                                            numberOfLines={1}
+                                        >
+                                            {task.title}
+                                        </Text>
+
+                                        <Text
+                                            style={styles.taskProject}
+                                            numberOfLines={1}
+                                        >
+                                            {task.project_name ||
+                                                'Tanpa proyek'}
+                                        </Text>
+
+                                        <View style={styles.taskMeta}>
+                                            <Text style={styles.taskStatus}>
+                                                {getStatusLabel(task.status)}
+                                            </Text>
+
+                                            {task.deadline && (
+                                                <Text
+                                                    style={styles.taskDeadline}
+                                                >
+                                                    •{' '}
+                                                    {formatDeadline(
+                                                        task.deadline
+                                                    )}
+                                                </Text>
+                                            )}
+                                        </View>
+                                    </View>
+
+                                    <View
+                                        style={getPriorityStyle(
+                                            task.priority
+                                        )}
+                                    >
+                                        <Text
+                                            style={getPriorityTextStyle(
+                                                task.priority
+                                            )}
+                                        >
+                                            {getPriorityLabel(
+                                                task.priority
+                                            )}
+                                        </Text>
+                                    </View>
+                                </Pressable>
+                            ))
+                        )}
+
+                        {/* PROYEK MEMBER */}
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>
+                                Proyek Saya
+                            </Text>
+
+                            <Pressable
+                                onPress={() =>
+                                    router.push('/(app)/projects')
+                                }
+                            >
+                                <Text style={styles.seeAll}>
+                                    Lihat Semua
+                                </Text>
+                            </Pressable>
+                        </View>
+
+                        {latestProjects.length === 0 ? (
+                            <View style={styles.emptyCard}>
+                                <Text style={styles.emptyTitle}>
+                                    Belum ada proyek
+                                </Text>
+
+                                <Text style={styles.emptyText}>
+                                    Proyek yang kamu ikuti akan muncul
+                                    di sini.
+                                </Text>
+                            </View>
+                        ) : (
+                            latestProjects.map((project) => (
+                                <Pressable
+                                    key={project.id}
+                                    style={styles.projectCard}
+                                    onPress={() =>
+                                        router.push({
+                                            pathname:
+                                                '/(app)/project-detail',
+                                            params: {
+                                                id: String(project.id),
+                                            },
+                                        })
+                                    }
+                                >
+                                    <View style={styles.projectTop}>
+                                        <View style={styles.projectInfo}>
+                                            <Text
+                                                style={styles.projectName}
+                                                numberOfLines={1}
+                                            >
+                                                {project.name}
+                                            </Text>
+
+                                            <Text
+                                                style={styles.projectDescription}
+                                                numberOfLines={2}
+                                            >
+                                                {project.description ||
+                                                    'Tidak ada deskripsi proyek'}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.progressHeader}>
+                                        <Text style={styles.progressLabel}>
+                                            Kemajuan
+                                        </Text>
+
+                                        <Text style={styles.progressValue}>
+                                            {project.progress || 0}%
+                                        </Text>
+                                    </View>
+
+                                    <View
+                                        style={styles.progressBackground}
+                                    >
+                                        <View
+                                            style={[
+                                                styles.progressBar,
+                                                {
+                                                    width: `${Math.min(
+                                                        Math.max(
+                                                            project.progress || 0,
+                                                            0
+                                                        ),
+                                                        100
+                                                    )}%`,
+                                                },
+                                            ]}
+                                        />
+                                    </View>
+
+                                    <View style={styles.projectFooter}>
+                                        <Text style={styles.taskCount}>
+                                            {project.completed_tasks || 0}{' '}
+                                            dari{' '}
+                                            {project.total_tasks || 0}{' '}
+                                            tugas selesai
+                                        </Text>
+
+                                        <Text style={styles.deadline}>
+                                            {formatDeadline(
+                                                project.deadline
+                                            )}
+                                        </Text>
+                                    </View>
+                                </Pressable>
+                            ))
+                        )}
+                    </>
+                )}
+
+                {/* ROLE TIDAK DIKENALI */}
+                {!isAdmin && !isMember && (
+                    <View style={styles.emptyCard}>
+                        <Text style={styles.emptyTitle}>
+                            Role belum dikenali
                         </Text>
-                    </Pressable>
-                </View>
-            )}
-        </ScrollView>
+
+                        <Text style={styles.emptyText}>
+                            Silakan login kembali untuk memuat data akun.
+                        </Text>
+
+                        <Pressable
+                            style={styles.emptyButton}
+                            onPress={() => router.replace('/login')}
+                        >
+                            <Text style={styles.emptyButtonText}>
+                                Kembali ke Login
+                            </Text>
+                        </Pressable>
+                    </View>
+                )}
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
@@ -1089,48 +990,44 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8FAFC',
     },
-
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#F8FAFC',
+    },
     content: {
         padding: 24,
-        paddingTop: 60,
+        paddingTop: 16,
         paddingBottom: 40,
     },
-
     loadingContainer: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#F8FAFC',
     },
-
     loadingText: {
         marginTop: 10,
         fontSize: 13,
         color: '#64748B',
     },
-
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-
     headerInfo: {
         flex: 1,
     },
-
     greeting: {
         fontSize: 14,
         color: '#64748B',
     },
-
     name: {
         marginTop: 4,
         fontSize: 26,
         fontWeight: '800',
         color: '#0F172A',
     },
-
     roleBadge: {
         alignSelf: 'flex-start',
         marginTop: 7,
@@ -1139,13 +1036,11 @@ const styles = StyleSheet.create({
         borderRadius: 7,
         backgroundColor: '#E2E8F0',
     },
-
     roleBadgeText: {
         fontSize: 9,
         fontWeight: '800',
         color: '#475569',
     },
-
     avatar: {
         width: 48,
         height: 48,
@@ -1154,29 +1049,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
     avatarText: {
         color: '#FFFFFF',
         fontSize: 17,
         fontWeight: '700',
     },
-
     summary: {
         marginTop: 28,
     },
-
     summaryTitle: {
         fontSize: 18,
         fontWeight: '700',
         color: '#0F172A',
         marginBottom: 14,
     },
-
     stats: {
         flexDirection: 'row',
         gap: 10,
     },
-
     statCard: {
         flex: 1,
         backgroundColor: '#FFFFFF',
@@ -1186,26 +1076,22 @@ const styles = StyleSheet.create({
         borderColor: '#E2E8F0',
         alignItems: 'center',
     },
-
     statNumber: {
         fontSize: 24,
         fontWeight: '800',
         color: '#0F172A',
         textAlign: 'center',
     },
-
     statLabel: {
         marginTop: 3,
         fontSize: 12,
         color: '#64748B',
         textAlign: 'center',
     },
-
     statusGrid: {
         flexDirection: 'row',
         gap: 10,
     },
-
     statusCard: {
         flex: 1,
         backgroundColor: '#FFFFFF',
@@ -1215,21 +1101,18 @@ const styles = StyleSheet.create({
         borderColor: '#E2E8F0',
         alignItems: 'center',
     },
-
     statusNumber: {
         fontSize: 20,
         fontWeight: '800',
         color: '#0F172A',
         textAlign: 'center',
     },
-
     statusLabel: {
         marginTop: 4,
         fontSize: 11,
         color: '#64748B',
         textAlign: 'center',
     },
-
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -1237,19 +1120,16 @@ const styles = StyleSheet.create({
         marginTop: 30,
         marginBottom: 14,
     },
-
     sectionTitle: {
         fontSize: 18,
         fontWeight: '700',
         color: '#0F172A',
     },
-
     seeAll: {
         fontSize: 13,
         fontWeight: '600',
         color: '#475569',
     },
-
     projectCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 18,
@@ -1258,11 +1138,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E2E8F0',
     },
-
     projectTop: {
         flexDirection: 'row',
     },
-
     projectIcon: {
         width: 44,
         height: 44,
@@ -1271,80 +1149,67 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
     projectIconText: {
         fontSize: 18,
         fontWeight: '800',
         color: '#0F172A',
     },
-
     projectInfo: {
         flex: 1,
     },
-
     projectName: {
         fontSize: 15,
         fontWeight: '700',
         color: '#0F172A',
     },
-
     projectDescription: {
         marginTop: 4,
         fontSize: 12,
         lineHeight: 17,
         color: '#64748B',
     },
-
     progressHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 20,
         marginBottom: 8,
     },
-
     progressLabel: {
         fontSize: 12,
         color: '#64748B',
     },
-
     progressValue: {
         fontSize: 12,
         fontWeight: '700',
         color: '#0F172A',
     },
-
     progressBackground: {
         height: 7,
         borderRadius: 4,
         backgroundColor: '#E2E8F0',
         overflow: 'hidden',
     },
-
     progressBar: {
         height: '100%',
         backgroundColor: '#0F172A',
         borderRadius: 4,
     },
-
     projectFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 14,
     },
-
     taskCount: {
         flex: 1,
         fontSize: 11,
         color: '#64748B',
     },
-
     deadline: {
         fontSize: 11,
         fontWeight: '600',
         color: '#475569',
         marginLeft: 10,
     },
-
     taskCard: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -1355,114 +1220,95 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E2E8F0',
     },
-
     taskIndicator: {
         width: 4,
         height: 48,
         borderRadius: 2,
         backgroundColor: '#94A3B8',
     },
-
     taskIndicatorHigh: {
         backgroundColor: '#DC2626',
     },
-
     taskIndicatorMedium: {
         backgroundColor: '#D97706',
     },
-
     taskIndicatorLow: {
         backgroundColor: '#16A34A',
     },
-
     taskInfo: {
         flex: 1,
         marginLeft: 12,
         marginRight: 8,
     },
-
     taskTitle: {
         fontSize: 14,
         fontWeight: '700',
         color: '#0F172A',
     },
-
     taskProject: {
         marginTop: 4,
         fontSize: 11,
         color: '#64748B',
     },
-
     taskMeta: {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 6,
     },
-
     taskStatus: {
         fontSize: 10,
         fontWeight: '600',
         color: '#64748B',
     },
-
     taskDeadline: {
         marginLeft: 5,
         fontSize: 10,
         color: '#94A3B8',
     },
-
     priorityHigh: {
         backgroundColor: '#FEE2E2',
         paddingHorizontal: 9,
         paddingVertical: 5,
         borderRadius: 8,
     },
-
     priorityHighText: {
         fontSize: 10,
         fontWeight: '700',
         color: '#B91C1C',
     },
-
     priorityMedium: {
         backgroundColor: '#FEF3C7',
         paddingHorizontal: 9,
         paddingVertical: 5,
         borderRadius: 8,
     },
-
     priorityMediumText: {
         fontSize: 10,
         fontWeight: '700',
         color: '#B45309',
     },
-
     priorityLow: {
         backgroundColor: '#DCFCE7',
         paddingHorizontal: 9,
         paddingVertical: 5,
         borderRadius: 8,
     },
-
     priorityLowText: {
         fontSize: 10,
         fontWeight: '700',
         color: '#15803D',
     },
-
     priorityDefault: {
         backgroundColor: '#F1F5F9',
         paddingHorizontal: 9,
         paddingVertical: 5,
         borderRadius: 8,
     },
-
     priorityDefaultText: {
         fontSize: 10,
         fontWeight: '700',
         color: '#475569',
     },
-
     emptyCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
@@ -1471,14 +1317,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E2E8F0',
     },
-
     emptyTitle: {
         fontSize: 14,
         fontWeight: '700',
         color: '#0F172A',
         textAlign: 'center',
     },
-
     emptyText: {
         marginTop: 6,
         fontSize: 12,
@@ -1486,7 +1330,6 @@ const styles = StyleSheet.create({
         color: '#64748B',
         textAlign: 'center',
     },
-
     emptyButton: {
         marginTop: 14,
         backgroundColor: '#0F172A',
@@ -1494,13 +1337,11 @@ const styles = StyleSheet.create({
         paddingVertical: 9,
         borderRadius: 9,
     },
-
     emptyButtonText: {
         fontSize: 11,
         fontWeight: '700',
         color: '#FFFFFF',
     },
-
     sectionTitleQuick: {
         fontSize: 18,
         fontWeight: '700',
@@ -1508,12 +1349,10 @@ const styles = StyleSheet.create({
         marginTop: 30,
         marginBottom: 14,
     },
-
     quickActions: {
         flexDirection: 'row',
         gap: 10,
     },
-
     quickCard: {
         flex: 1,
         backgroundColor: '#FFFFFF',
@@ -1522,7 +1361,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E2E8F0',
     },
-
     quickIcon: {
         width: 38,
         height: 38,
@@ -1531,20 +1369,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
     quickIconText: {
         fontSize: 14,
         fontWeight: '800',
         color: '#475569',
     },
-
     quickTitle: {
         marginTop: 12,
         fontSize: 13,
         fontWeight: '700',
         color: '#0F172A',
     },
-
     quickSubtitle: {
         marginTop: 3,
         fontSize: 11,

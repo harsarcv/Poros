@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -9,22 +9,32 @@ import {
 } from 'react-native';
 
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
 
 import { API_URL } from '../../constants/api';
 import { getToken, getUser } from '../../utils/storage';
 
+type Project = {
+    id: number;
+    name: string;
+    description?: string;
+    deadline?: string;
+    status: string;
+    total_tasks: number;
+    completed_tasks: number;
+    progress: number;
+};
+
 export default function ProjectsScreen() {
-    const [projects, setProjects] = useState<any[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState('SEMUA');
     const [user, setUser] = useState<any>(null);
 
     useFocusEffect(
         useCallback(() => {
+
             const fetchProjects = async () => {
                 try {
-
                     const token = await getToken();
                     const currentUser = await getUser();
 
@@ -35,6 +45,7 @@ export default function ProjectsScreen() {
                         return;
                     }
 
+                    // AMBIL DATA PROJECT
                     const response = await fetch(
                         `${API_URL}/api/projects`,
                         {
@@ -48,12 +59,89 @@ export default function ProjectsScreen() {
 
                     if (!response.ok) {
                         throw new Error(
-                            data.message ||
-                            'Gagal mengambil proyek'
+                            data.message || 'Gagal mengambil proyek'
                         );
                     }
 
-                    setProjects(data);
+                    const projectData = Array.isArray(data)
+                        ? data
+                        : [];
+
+                    // AMBIL TASK DAN HITUNG PROGRESS SETIAP PROJECT
+                    const projectsWithProgress: Project[] =
+                        await Promise.all(
+                            projectData.map(async (project: any) => {
+                                try {
+                                    const taskResponse = await fetch(
+                                        `${API_URL}/api/projects/${project.id}/tasks`,
+                                        {
+                                            headers: {
+                                                Authorization: `Bearer ${token}`,
+                                            },
+                                        }
+                                    );
+
+                                    if (!taskResponse.ok) {
+                                        throw new Error(
+                                            `Gagal mengambil task project ${project.id}`
+                                        );
+                                    }
+
+                                    const taskData =
+                                        await taskResponse.json();
+
+                                    const projectTasks = Array.isArray(
+                                        taskData
+                                    )
+                                        ? taskData
+                                        : [];
+
+                                    const totalTasks =
+                                        projectTasks.length;
+
+                                    const completedTasks =
+                                        projectTasks.filter(
+                                            (task: any) =>
+                                                String(
+                                                    task.status || ''
+                                                )
+                                                    .trim()
+                                                    .toUpperCase() === 'DONE'
+                                        ).length;
+
+                                    const progress =
+                                        totalTasks > 0
+                                            ? Math.round(
+                                                (completedTasks /
+                                                    totalTasks) *
+                                                100
+                                            )
+                                            : 0;
+
+                                    return {
+                                        ...project,
+                                        total_tasks: totalTasks,
+                                        completed_tasks:
+                                            completedTasks,
+                                        progress,
+                                    };
+                                } catch (error) {
+                                    console.error(
+                                        `Gagal menghitung progress project ${project.id}:`,
+                                        error
+                                    );
+
+                                    return {
+                                        ...project,
+                                        total_tasks: 0,
+                                        completed_tasks: 0,
+                                        progress: 0,
+                                    };
+                                }
+                            })
+                        );
+
+                    setProjects(projectsWithProgress);
                 } catch (error) {
                     console.error(
                         'Gagal mengambil proyek:',
@@ -68,13 +156,13 @@ export default function ProjectsScreen() {
         }, [])
     );
 
-    const formatDate = (date: string | null) => {
+    // FORMAT TANGGAL
+    const formatDate = (date?: string | null) => {
         if (!date) {
             return 'Tidak ada deadline';
         }
 
         const cleanDate = String(date).split('T')[0];
-
         const parts = cleanDate.split('-');
 
         if (parts.length !== 3) {
@@ -86,45 +174,40 @@ export default function ProjectsScreen() {
         const day = Number(parts[2]);
 
         const months = [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'Mei',
-            'Jun',
-            'Jul',
-            'Agu',
-            'Sep',
-            'Okt',
-            'Nov',
-            'Des',
+            'Jan', 'Feb', 'Mar', 'Apr',
+            'Mei', 'Jun', 'Jul', 'Agu',
+            'Sep', 'Okt', 'Nov', 'Des',
         ];
 
         return `${day} ${months[month - 1]} ${year}`;
     };
 
+    // ROLE
     const role = String(
         user?.role || ''
-    ).toUpperCase();
+    )
+        .trim()
+        .toUpperCase();
 
     const isManager =
         role === 'ADMIN' ||
         role === 'MANAGER' ||
         role === 'ADMIN/MANAGER';
 
-    const filteredProjects = projects.filter(
-        (project) => {
-            if (activeFilter === 'AKTIF') {
-                return project.status === 'AKTIF';
-            }
+    // FILTER PROJECT
+    const filteredProjects = projects.filter((project) => {
+        const progress = Number(project.progress || 0);
 
-            if (activeFilter === 'SELESAI') {
-                return project.status === 'SELESAI';
-            }
-
-            return true;
+        if (activeFilter === 'AKTIF') {
+            return progress < 100;
         }
-    );
+
+        if (activeFilter === 'SELESAI') {
+            return progress >= 100;
+        }
+
+        return true;
+    });
 
     if (loading) {
         return (
@@ -141,7 +224,6 @@ export default function ProjectsScreen() {
     return (
         <View style={styles.container}>
             {/* HEADER */}
-
             <View style={styles.header}>
                 <View style={styles.headerInfo}>
                     <Text style={styles.title}>
@@ -156,19 +238,14 @@ export default function ProjectsScreen() {
                 </View>
 
                 {/* HANYA ADMIN / MANAGER */}
-
                 {isManager && (
                     <Pressable
                         style={styles.addButton}
                         onPress={() =>
-                            router.push(
-                                '/(app)/create-project'
-                            )
+                            router.push('/(app)/create-project')
                         }
                     >
-                        <Text
-                            style={styles.addButtonText}
-                        >
+                        <Text style={styles.addButtonText}>
                             +
                         </Text>
                     </Pressable>
@@ -176,7 +253,6 @@ export default function ProjectsScreen() {
             </View>
 
             {/* FILTER */}
-
             <View style={styles.filterContainer}>
                 <Pressable
                     style={[
@@ -184,9 +260,7 @@ export default function ProjectsScreen() {
                         activeFilter === 'SEMUA' &&
                         styles.filterActive,
                     ]}
-                    onPress={() =>
-                        setActiveFilter('SEMUA')
-                    }
+                    onPress={() => setActiveFilter('SEMUA')}
                 >
                     <Text
                         style={
@@ -205,9 +279,7 @@ export default function ProjectsScreen() {
                         activeFilter === 'AKTIF' &&
                         styles.filterActive,
                     ]}
-                    onPress={() =>
-                        setActiveFilter('AKTIF')
-                    }
+                    onPress={() => setActiveFilter('AKTIF')}
                 >
                     <Text
                         style={
@@ -226,9 +298,7 @@ export default function ProjectsScreen() {
                         activeFilter === 'SELESAI' &&
                         styles.filterActive,
                     ]}
-                    onPress={() =>
-                        setActiveFilter('SELESAI')
-                    }
+                    onPress={() => setActiveFilter('SELESAI')}
                 >
                     <Text
                         style={
@@ -243,7 +313,6 @@ export default function ProjectsScreen() {
             </View>
 
             {/* PROJECT LIST */}
-
             {filteredProjects.length === 0 ? (
                 <View style={styles.emptyCard}>
                     <Text style={styles.emptyTitle}>
@@ -265,11 +334,7 @@ export default function ProjectsScreen() {
                                 )
                             }
                         >
-                            <Text
-                                style={
-                                    styles.emptyButtonText
-                                }
-                            >
+                            <Text style={styles.emptyButtonText}>
                                 Buat Proyek
                             </Text>
                         </Pressable>
@@ -278,9 +343,7 @@ export default function ProjectsScreen() {
             ) : (
                 <FlatList
                     data={filteredProjects}
-                    keyExtractor={(item) =>
-                        String(item.id)
-                    }
+                    keyExtractor={(item) => String(item.id)}
                     renderItem={({ item: project }) => (
                         <Pressable
                             style={styles.projectCard}
@@ -289,15 +352,12 @@ export default function ProjectsScreen() {
                                     pathname:
                                         '/(app)/project-detail',
                                     params: {
-                                        id: String(
-                                            project.id
-                                        ),
+                                        id: String(project.id),
                                     },
                                 })
                             }
                         >
                             {/* CARD HEADER */}
-
                             <View style={styles.cardHeader}>
                                 <View style={styles.projectInfo}>
                                     <Text
@@ -324,33 +384,18 @@ export default function ProjectsScreen() {
                             </View>
 
                             {/* PROGRESS */}
-
-                            <View
-                                style={
-                                    styles.progressHeader
-                                }
-                            >
-                                <Text
-                                    style={
-                                        styles.progressLabel
-                                    }
-                                >
+                            <View style={styles.progressHeader}>
+                                <Text style={styles.progressLabel}>
                                     Kemajuan
                                 </Text>
 
-                                <Text
-                                    style={
-                                        styles.progressValue
-                                    }
-                                >
+                                <Text style={styles.progressValue}>
                                     {project.progress || 0}%
                                 </Text>
                             </View>
 
                             <View
-                                style={
-                                    styles.progressBackground
-                                }
+                                style={styles.progressBackground}
                             >
                                 <View
                                     style={[
@@ -358,8 +403,7 @@ export default function ProjectsScreen() {
                                         {
                                             width: `${Math.min(
                                                 Math.max(
-                                                    project.progress ||
-                                                    0,
+                                                    project.progress || 0,
                                                     0
                                                 ),
                                                 100
@@ -370,37 +414,21 @@ export default function ProjectsScreen() {
                             </View>
 
                             {/* CARD FOOTER */}
-
-                            <View
-                                style={
-                                    styles.cardFooter
-                                }
-                            >
-                                <Text
-                                    style={
-                                        styles.taskText
-                                    }
-                                >
-                                    {project.total_tasks ||
-                                        0}{' '}
-                                    tugas
+                            <View style={styles.cardFooter}>
+                                <Text style={styles.taskText}>
+                                    {project.completed_tasks || 0}
+                                    {' dari '}
+                                    {project.total_tasks || 0}
+                                    {' tugas selesai'}
                                 </Text>
 
-                                <Text
-                                    style={
-                                        styles.deadline
-                                    }
-                                >
-                                    {formatDate(
-                                        project.deadline
-                                    )}
+                                <Text style={styles.deadline}>
+                                    {formatDate(project.deadline)}
                                 </Text>
                             </View>
                         </Pressable>
                     )}
-                    contentContainerStyle={
-                        styles.projectList
-                    }
+                    contentContainerStyle={styles.projectList}
                     showsVerticalScrollIndicator={false}
                     ItemSeparatorComponent={() => (
                         <View style={styles.separator} />
@@ -523,21 +551,6 @@ const styles = StyleSheet.create({
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-
-    icon: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: '#E2E8F0',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
-    iconText: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: '#0F172A',
     },
 
     projectInfo: {

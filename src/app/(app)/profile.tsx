@@ -10,6 +10,7 @@ import {
     Text,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '../../constants/api';
 import { clearSession, getToken } from '../../utils/storage';
 
@@ -75,189 +76,191 @@ export default function ProfileScreen() {
     }
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-        >
-            <Text style={styles.title}>
-                Profil
-            </Text>
-
-            <Text style={styles.subtitle}>
-                Kelola informasi akun dan pengaturan kamu.
-            </Text>
-
-            {/* PROFILE CARD */}
-            <View style={styles.profileCard}>
-                <View style={styles.avatar}>
-                    {user?.profile_image ? (
-                        <Image
-                            source={{
-                                uri: user.profile_image,
-                            }}
-                            style={styles.avatarImage}
-                        />
-                    ) : (
-                        <Text style={styles.avatarText}>
-                            {user?.name?.charAt(0)?.toUpperCase() || '?'}
-                        </Text>
-                    )}
-                </View>
-
-                <View style={styles.profileInfo}>
-                    <Text style={styles.name}>
-                        {user?.name || 'Pengguna'}
-                    </Text>
-
-                    <Text style={styles.email}>
-                        {user?.email || '-'}
-                    </Text>
-
-                    <View style={styles.roleBadge}>
-                        <Text style={styles.roleText}>
-                            {user?.role || 'MEMBER'}
-                        </Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* AKUN */}
-            <Text style={styles.sectionTitle}>
-                Akun
-            </Text>
-
-            <View style={styles.menuCard}>
-                <Pressable
-                    style={styles.menuItem}
-                    onPress={() =>
-                        router.push('/(app)/edit-profile')
-                    }
-                >
-                    <View style={styles.menuIcon}>
-                        <Ionicons
-                            name="person-outline"
-                            size={21}
-                            color="#475569"
-                        />
-                    </View>
-
-                    <View style={styles.menuInfo}>
-                        <Text style={styles.menuTitle}>
-                            Edit Profil
-                        </Text>
-
-                        <Text style={styles.menuSubtitle}>
-                            Ubah nama dan informasi akun
-                        </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>
-                        ›
-                    </Text>
-                </Pressable>
-
-                <View style={styles.divider} />
-
-                <Pressable
-                    style={styles.menuItem}
-                    onPress={() => router.push('/(app)/security')}
-                >
-                    <View style={styles.menuIcon}>
-                        <Ionicons
-                            name="lock-closed-outline"
-                            size={21}
-                            color="#475569"
-                        />
-                    </View>
-
-                    <View style={styles.menuInfo}>
-                        <Text style={styles.menuTitle}>
-                            Keamanan
-                        </Text>
-
-                        <Text style={styles.menuSubtitle}>
-                            Kelola kata sandi akun
-                        </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>
-                        ›
-                    </Text>
-                </Pressable>
-            </View>
-
-            {/* PENGATURAN */}
-            <Text style={styles.sectionTitle}>
-                Pengaturan
-            </Text>
-
-            <View style={styles.menuCard}>
-                <Pressable style={styles.menuItem} onPress={() => router.push('/(app)/notifications')}>
-                    <View style={styles.menuIcon}>
-                        <Ionicons
-                            name="notifications-outline"
-                            size={21}
-                            color="#475569"
-                        />
-                    </View>
-
-                    <View style={styles.menuInfo}>
-                        <Text style={styles.menuTitle}>
-                            Notifikasi
-                        </Text>
-
-                        <Text style={styles.menuSubtitle}>
-                            Pengaturan notifikasi aplikasi
-                        </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>
-                        ›
-                    </Text>
-                </Pressable>
-
-                <View style={styles.divider} />
-
-                <Pressable style={styles.menuItem} onPress={() => router.push('/(app)/about')}>
-                    <View style={styles.menuIcon}>
-                        <Ionicons
-                            name="information-circle-outline"
-                            size={21}
-                            color="#475569"
-                        />
-                    </View>
-
-                    <View style={styles.menuInfo}>
-                        <Text style={styles.menuTitle}>
-                            Tentang POROS
-                        </Text>
-
-                        <Text style={styles.menuSubtitle}>
-                            Informasi aplikasi
-                        </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>
-                        ›
-                    </Text>
-                </Pressable>
-            </View>
-
-            {/* LOGOUT */}
-            <Pressable
-                style={styles.logoutButton}
-                onPress={handleLogout}
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
             >
-                <Text style={styles.logoutText}>
-                    Keluar
+                <Text style={styles.title}>
+                    Profil
                 </Text>
-            </Pressable>
 
-            <Text style={styles.version}>
-                POROS v1.0.0
-            </Text>
-        </ScrollView>
+                <Text style={styles.subtitle}>
+                    Kelola informasi akun dan pengaturan kamu.
+                </Text>
+
+                {/* PROFILE CARD */}
+                <View style={styles.profileCard}>
+                    <View style={styles.avatar}>
+                        {user?.profile_image ? (
+                            <Image
+                                source={{
+                                    uri: user.profile_image,
+                                }}
+                                style={styles.avatarImage}
+                            />
+                        ) : (
+                            <Text style={styles.avatarText}>
+                                {user?.name?.charAt(0)?.toUpperCase() || '?'}
+                            </Text>
+                        )}
+                    </View>
+
+                    <View style={styles.profileInfo}>
+                        <Text style={styles.name}>
+                            {user?.name || 'Pengguna'}
+                        </Text>
+
+                        <Text style={styles.email}>
+                            {user?.email || '-'}
+                        </Text>
+
+                        <View style={styles.roleBadge}>
+                            <Text style={styles.roleText}>
+                                {user?.role || 'MEMBER'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* AKUN */}
+                <Text style={styles.sectionTitle}>
+                    Akun
+                </Text>
+
+                <View style={styles.menuCard}>
+                    <Pressable
+                        style={styles.menuItem}
+                        onPress={() =>
+                            router.push('/(app)/edit-profile')
+                        }
+                    >
+                        <View style={styles.menuIcon}>
+                            <Ionicons
+                                name="person-outline"
+                                size={21}
+                                color="#475569"
+                            />
+                        </View>
+
+                        <View style={styles.menuInfo}>
+                            <Text style={styles.menuTitle}>
+                                Edit Profil
+                            </Text>
+
+                            <Text style={styles.menuSubtitle}>
+                                Ubah nama dan informasi akun
+                            </Text>
+                        </View>
+
+                        <Text style={styles.arrow}>
+                            ›
+                        </Text>
+                    </Pressable>
+
+                    <View style={styles.divider} />
+
+                    <Pressable
+                        style={styles.menuItem}
+                        onPress={() => router.push('/(app)/security')}
+                    >
+                        <View style={styles.menuIcon}>
+                            <Ionicons
+                                name="lock-closed-outline"
+                                size={21}
+                                color="#475569"
+                            />
+                        </View>
+
+                        <View style={styles.menuInfo}>
+                            <Text style={styles.menuTitle}>
+                                Keamanan
+                            </Text>
+
+                            <Text style={styles.menuSubtitle}>
+                                Kelola kata sandi akun
+                            </Text>
+                        </View>
+
+                        <Text style={styles.arrow}>
+                            ›
+                        </Text>
+                    </Pressable>
+                </View>
+
+                {/* PENGATURAN */}
+                <Text style={styles.sectionTitle}>
+                    Pengaturan
+                </Text>
+
+                <View style={styles.menuCard}>
+                    <Pressable style={styles.menuItem} onPress={() => router.push('/(app)/notifications')}>
+                        <View style={styles.menuIcon}>
+                            <Ionicons
+                                name="notifications-outline"
+                                size={21}
+                                color="#475569"
+                            />
+                        </View>
+
+                        <View style={styles.menuInfo}>
+                            <Text style={styles.menuTitle}>
+                                Notifikasi
+                            </Text>
+
+                            <Text style={styles.menuSubtitle}>
+                                Pengaturan notifikasi aplikasi
+                            </Text>
+                        </View>
+
+                        <Text style={styles.arrow}>
+                            ›
+                        </Text>
+                    </Pressable>
+
+                    <View style={styles.divider} />
+
+                    <Pressable style={styles.menuItem} onPress={() => router.push('/(app)/about')}>
+                        <View style={styles.menuIcon}>
+                            <Ionicons
+                                name="information-circle-outline"
+                                size={21}
+                                color="#475569"
+                            />
+                        </View>
+
+                        <View style={styles.menuInfo}>
+                            <Text style={styles.menuTitle}>
+                                Tentang POROS
+                            </Text>
+
+                            <Text style={styles.menuSubtitle}>
+                                Informasi aplikasi
+                            </Text>
+                        </View>
+
+                        <Text style={styles.arrow}>
+                            ›
+                        </Text>
+                    </Pressable>
+                </View>
+
+                {/* LOGOUT */}
+                <Pressable
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
+                >
+                    <Text style={styles.logoutText}>
+                        Keluar
+                    </Text>
+                </Pressable>
+
+                <Text style={styles.version}>
+                    POROS v1.0.0
+                </Text>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
@@ -267,9 +270,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8FAFC',
     },
 
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#F8FAFC',
+    },
+
     content: {
         padding: 24,
-        paddingTop: 60,
+        paddingTop: 16,
         paddingBottom: 40,
     },
 
